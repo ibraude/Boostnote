@@ -22,6 +22,7 @@ import i18n from 'browser/lib/i18n'
 import { confirmDeleteNote } from 'browser/lib/confirmDeleteNote'
 import context from 'browser/lib/context'
 import queryString from 'query-string'
+import { getNotes } from 'browser/lib/annotation-extractor'
 
 const { remote } = require('electron')
 const { dialog } = remote
@@ -903,7 +904,7 @@ class NoteList extends React.Component {
   importFromFile () {
     const options = {
       filters: [
-        { name: 'Documents', extensions: ['md', 'txt'] }
+        { name: 'Documents', extensions: ['md', 'txt', 'pdf'] }
       ],
       properties: ['openFile', 'multiSelections']
     }
@@ -927,41 +928,73 @@ class NoteList extends React.Component {
 
     if (filepaths === undefined) return
     filepaths.forEach((filepath) => {
-      fs.readFile(filepath, (err, data) => {
-        if (err) throw Error('File reading error: ', err)
+      if (path.extname(filepath) === '.pdf') {
+        getNotes(filepath)
+          .then((notes) => {
+            const content = notes.join('\r\n\r\n')
+            const newNote = {
+              content: content,
+              folder: folder.key,
+              title: path.basename(filepath, path.extname(filepath)),
+              type: 'MARKDOWN_NOTE',
+              createdAt: new Date(),
+              updatedAt: new Date()
+            }
+            dataApi.createNote(storage.key, newNote)
+              .then((note) => {
+                attachmentManagement.importAttachments(note.content, filepath, storage.key, note.key)
+                  .then((newcontent) => {
+                    note.content = newcontent
 
-        fs.stat(filepath, (err, {mtime, birthtime}) => {
-          if (err) throw Error('File stat reading error: ', err)
+                    dataApi.updateNote(storage.key, note.key, note)
 
-          const content = data.toString()
-          const newNote = {
-            content: content,
-            folder: folder.key,
-            title: path.basename(filepath, path.extname(filepath)),
-            type: 'MARKDOWN_NOTE',
-            createdAt: birthtime,
-            updatedAt: mtime
-          }
-          dataApi.createNote(storage.key, newNote)
-          .then((note) => {
-            attachmentManagement.importAttachments(note.content, filepath, storage.key, note.key)
-            .then((newcontent) => {
-              note.content = newcontent
-
-              dataApi.updateNote(storage.key, note.key, note)
-
-              dispatch({
-                type: 'UPDATE_NOTE',
-                note: note
+                    dispatch({
+                      type: 'UPDATE_NOTE',
+                      note: note
+                    })
+                    dispatch(push({
+                      pathname: location.pathname,
+                      search: queryString.stringify({key: getNoteKey(note)})
+                    }))
+                  })
               })
-              dispatch(push({
-                pathname: location.pathname,
-                search: queryString.stringify({key: getNoteKey(note)})
-              }))
-            })
+          })
+      } else {
+        fs.readFile(filepath, (err, data) => {
+          if (err) throw Error('File reading error: ', err)
+
+          fs.stat(filepath, (err, {mtime, birthtime}) => {
+            if (err) throw Error('File stat reading error: ', err)
+            const content = data.toString()
+            const newNote = {
+              content: content,
+              folder: folder.key,
+              title: path.basename(filepath, path.extname(filepath)),
+              type: 'MARKDOWN_NOTE',
+              createdAt: birthtime,
+              updatedAt: mtime
+            }
+            dataApi.createNote(storage.key, newNote)
+              .then((note) => {
+                attachmentManagement.importAttachments(note.content, filepath, storage.key, note.key)
+                  .then((newcontent) => {
+                    note.content = newcontent
+
+                    dataApi.updateNote(storage.key, note.key, note)
+
+                    dispatch({
+                      type: 'UPDATE_NOTE',
+                      note: note
+                    })
+                    dispatch(push({
+                      pathname: location.pathname,
+                      search: queryString.stringify({key: getNoteKey(note)})
+                    }))
+                  })
+              })
           })
         })
-      })
+      }
     })
   }
 
