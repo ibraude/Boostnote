@@ -87,6 +87,7 @@ class NoteList extends React.Component {
       this.alertIfSnippet(msg)
     }
     this.importFromFileHandler = this.importFromFile.bind(this)
+    this.importFromPdfHandler = this.importFromPdf.bind(this)
     this.jumpNoteByHash = this.jumpNoteByHashHandler.bind(this)
     this.handleNoteListKeyUp = this.handleNoteListKeyUp.bind(this)
     this.handleNoteListBlur = this.handleNoteListBlur.bind(this)
@@ -121,6 +122,7 @@ class NoteList extends React.Component {
     ee.on('list:focus', this.focusHandler)
     ee.on('list:isMarkdownNote', this.alertIfSnippetHandler)
     ee.on('import:file', this.importFromFileHandler)
+    ee.on('import:pdfComments', this.importFromPdfHandler)
     ee.on('list:jump', this.jumpNoteByHash)
     ee.on('list:navigate', this.navigate)
   }
@@ -144,6 +146,7 @@ class NoteList extends React.Component {
     ee.off('list:focus', this.focusHandler)
     ee.off('list:isMarkdownNote', this.alertIfSnippetHandler)
     ee.off('import:file', this.importFromFileHandler)
+    ee.off('import:pdfComments', this.importFromPdfHandler)
     ee.off('list:jump', this.jumpNoteByHash)
   }
 
@@ -904,7 +907,20 @@ class NoteList extends React.Component {
   importFromFile () {
     const options = {
       filters: [
-        { name: 'Documents', extensions: ['md', 'txt', 'pdf'] }
+        { name: 'Documents', extensions: ['md', 'txt'] }
+      ],
+      properties: ['openFile', 'multiSelections']
+    }
+
+    dialog.showOpenDialog(remote.getCurrentWindow(), options, (filepaths) => {
+      this.addNotesFromFiles(filepaths)
+    })
+  }
+
+  importFromPdf () {
+    const options = {
+      filters: [
+        { name: 'Documents', extensions: ['pdf'] }
       ],
       properties: ['openFile', 'multiSelections']
     }
