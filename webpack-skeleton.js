@@ -7,8 +7,8 @@ var config = {
     main: ['./browser/main/index.js']
   },
   resolve: {
-    extensions: ['', '.js', '.jsx', '.styl'],
-    packageMains: [
+    extensions: ['.js', '.jsx', '.styl', '.css'],
+    mainFields: [
       'webpack',
       'browser',
       'web',
@@ -21,14 +21,12 @@ var config = {
       browser: path.join(__dirname, 'browser')
     }
   },
-  plugins: [new webpack.NoErrorsPlugin(), new NodeTargetPlugin()],
-  stylus: {
-    use: [require('nib')()],
-    import: [
-      '~nib/lib/nib/index.styl',
-      path.join(__dirname, 'browser/styles/index.styl')
-    ]
+  optimization: {
+    noEmitOnErrors: true
   },
+  plugins: [
+    new NodeTargetPlugin(),
+    new webpack.LoaderOptionsPlugin({debug: true})],
   externals: [
     'pdf-js',
     'prettier',

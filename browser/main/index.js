@@ -3,7 +3,7 @@ import Main from './Main'
 import { store, history } from './store'
 import React, { Fragment } from 'react'
 import ReactDOM from 'react-dom'
-require('!!style!css!stylus?sourceMap!./global.styl')
+require('!!style-loader!css!stylus?sourceMap!./global.styl')
 import { Route, Switch, Redirect } from 'react-router-dom'
 import { ConnectedRouter } from 'connected-react-router'
 import DevTools from './DevTools'

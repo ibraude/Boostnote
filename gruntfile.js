@@ -288,7 +288,7 @@ module.exports = function (grunt) {
 
   grunt.registerTask('bfm', function () {
     const Color = require('color')
-    const parseCSS = require('css').parse
+    const parseCSS = require('css-loader').parse
 
     function generateRule (selector, bgColor, fgColor) {
       if (bgColor.isLight()) {

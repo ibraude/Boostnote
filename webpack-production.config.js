@@ -5,24 +5,50 @@ const NodeTargetPlugin = require('webpack/lib/node/NodeTargetPlugin')
 
 var config = Object.assign({}, skeleton, {
   module: {
-    loaders: [
-      {
-        test: /pdf(\.worker)?(\.min)?\.js\.map$/,
-        loader: 'raw-loader'
-      },
-      {
-        test: /(\.js|\.jsx)?$/,
-        exclude: [/(node_modules|bower_components)/, /pdf(\.worker)?(\.min)?\.js\.map$/],
-        loader: 'babel'
-      },
+    rules: [
       {
         test: /\.styl$/,
-        exclude: /(node_modules|bower_components)/,
-        loader: 'style!css?modules&importLoaders=1&localIdentName=[name]__[local]___[path]!stylus?sourceMap'
+        use: [
+          'style-loader',
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true
+            }},
+          {
+            loader: 'stylus-loader',
+            options: {
+              use: [require('nib')()],
+              import: ['~nib/lib/nib/index.styl',
+                path.join(__dirname, 'browser/styles/index.styl')
+              ]
+            }
+          }
+        ]
       },
       {
+        test: /\.m?js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env']
+          }
+        }
+      },
+      // {
+      //   test: /(\.js|\.jsx)?$/,
+      //   exclude: /(node_modules|bower_components)/,
+      //   use: 'babel-loader'
+      // },
+      // {
+      //   test: /\.styl$/,
+      //   exclude: /(node_modules|bower_components)/,
+      //   use: 'style!css?modules&importLoaders=1&localIdentName=[name]__[local]___[path]!stylus?sourceMap'
+      // },
+      {
         test: /\.json$/,
-        loader: 'json'
+        use: 'json'
       }
     ]
   },

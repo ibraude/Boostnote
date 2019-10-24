@@ -32,7 +32,7 @@ const fileUrl = require('file-url')
 
 const dialog = remote.dialog
 
-const markdownStyle = require('!!css!stylus?sourceMap!./markdown.styl')[0][1]
+import markdownStyle from '!!css-loader!./markdown.styl'
 const appPath = fileUrl(
   process.env.NODE_ENV === 'production' ? app.getAppPath() : path.resolve()
 )
@@ -98,7 +98,8 @@ function buildStyle (opts) {
        url('${appPath}/resources/fonts/MaterialIcons-Regular.ttf') format('truetype');
 }
 
-${markdownStyle}
+${markdownStyle[0].toString()}
+${markdownStyle[1].toString()}
 
 body {
   font-family: '${fontFamily.join("','")}';

@@ -94,7 +94,7 @@ class Detail extends React.Component {
           {..._.pick(this.props, [
             'dispatch',
             'data',
-            'style',
+            'style-loader',
             'ignorePreviewPointerEvents',
             'location'
           ])}
@@ -110,7 +110,7 @@ class Detail extends React.Component {
         {..._.pick(this.props, [
           'dispatch',
           'data',
-          'style',
+          'style-loader',
           'ignorePreviewPointerEvents',
           'location'
         ])}
