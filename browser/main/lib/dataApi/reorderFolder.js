@@ -1,9 +1,9 @@
-const _ = require('lodash')
-_.move = require('lodash-move').default
-const path = require('path')
-const resolveStorageData = require('./resolveStorageData')
-const CSON = require('@rokt33r/season')
-const { findStorage } = require('browser/lib/findStorage')
+const _ = require("lodash");
+_.move = require("lodash-move").default;
+const path = require("path");
+const resolveStorageData = require("./resolveStorageData");
+const CSON = require("@rokt33r/season");
+const { findStorage } = require("browser/lib/findStorage");
 
 /**
  * @param {String} storageKey
@@ -17,26 +17,30 @@ const { findStorage } = require('browser/lib/findStorage')
  * }
  * ```
  */
-function reorderFolder (storageKey, oldIndex, newIndex) {
-  let targetStorage
+function reorderFolder(storageKey, oldIndex, newIndex) {
+  let targetStorage;
   try {
-    if (!_.isNumber(oldIndex)) throw new Error('oldIndex must be a number.')
-    if (!_.isNumber(newIndex)) throw new Error('newIndex must be a number.')
+    if (!_.isNumber(oldIndex)) throw new Error("oldIndex must be a number.");
+    if (!_.isNumber(newIndex)) throw new Error("newIndex must be a number.");
 
-    targetStorage = findStorage(storageKey)
+    targetStorage = findStorage(storageKey);
   } catch (e) {
-    return Promise.reject(e)
+    return Promise.reject(e);
   }
 
-  return resolveStorageData(targetStorage)
-    .then(function reorderFolder (storage) {
-      storage.folders = _.move(storage.folders, oldIndex, newIndex)
-      CSON.writeFileSync(path.join(storage.path, 'boostnote.json'), _.pick(storage, ['folders', 'version']))
+  return resolveStorageData(targetStorage).then(function reorderFolder(
+    storage
+  ) {
+    storage.folders = _.move(storage.folders, oldIndex, newIndex);
+    CSON.writeFileSync(
+      path.join(storage.path, "boostnote.json"),
+      _.pick(storage, ["folders", "version"])
+    );
 
-      return {
-        storage
-      }
-    })
+    return {
+      storage
+    };
+  });
 }
 
-module.exports = reorderFolder
+module.exports = reorderFolder;

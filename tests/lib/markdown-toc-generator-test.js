@@ -2,11 +2,11 @@
  * @fileoverview Unit test for browser/lib/markdown-toc-generator
  */
 
-import CodeMirror from 'codemirror'
-require('codemirror/addon/search/searchcursor.js')
-const test = require('ava')
-const markdownToc = require('browser/lib/markdown-toc-generator')
-const EOL = require('os').EOL
+import CodeMirror from "codemirror";
+require("codemirror/addon/search/searchcursor.js");
+const test = require("ava");
+const markdownToc = require("browser/lib/markdown-toc-generator");
+const EOL = require("os").EOL;
 
 test(t => {
   /**
@@ -20,10 +20,10 @@ test(t => {
    */
   const testCases = [
     [
-      '***************************** empty note',
-      `  
+      "***************************** empty note",
+      `
     `,
-      ` 
+      `
 <!-- toc -->
 
 
@@ -32,7 +32,7 @@ test(t => {
     `
     ],
     [
-      '***************************** single level',
+      "***************************** single level",
       `
 # one
     `,
@@ -45,10 +45,10 @@ test(t => {
     `
     ],
     [
-      '***************************** two levels',
+      "***************************** two levels",
       `
 # one
-# two    
+# two
     `,
       `
 <!-- toc -->
@@ -56,11 +56,11 @@ test(t => {
 - [one](#one)
 - [two](#two)
 
-<!-- tocstop -->    
+<!-- tocstop -->
     `
     ],
     [
-      '***************************** 3 levels with children',
+      "***************************** 3 levels with children",
       `
 # one
 ## one one
@@ -83,7 +83,7 @@ test(t => {
     `
     ],
     [
-      '***************************** 3 levels, 3rd with 6 sub-levels',
+      "***************************** 3 levels, 3rd with 6 sub-levels",
       `
 # one
 ## one one
@@ -114,7 +114,7 @@ test(t => {
     `
     ],
     [
-      '***************************** multilevel with texts in between',
+      "***************************** multilevel with texts in between",
       `
 # one
 this is a level one text
@@ -153,7 +153,7 @@ this is a level one text
 ###### three three three three three three
   this is a text
   this is a text
-  this is a text      
+  this is a text
     `,
       `
 <!-- toc -->
@@ -176,7 +176,7 @@ this is a level one text
     `
     ],
     [
-      '***************************** outdated TOC',
+      "***************************** outdated TOC",
       `
 <!-- toc -->
 
@@ -186,7 +186,7 @@ this is a level one text
 <!-- tocstop -->
 
 # one modified
-## one one      
+## one one
     `,
       `
 <!-- toc -->
@@ -198,9 +198,9 @@ this is a level one text
     `
     ],
     [
-      '***************************** properly generated case sensitive TOC',
+      "***************************** properly generated case sensitive TOC",
       `
-# onE 
+# onE
 ## oNe one
     `,
       `
@@ -213,7 +213,7 @@ this is a level one text
     `
     ],
     [
-      '***************************** position of TOC is stable (do not use elements above toc marker)',
+      "***************************** position of TOC is stable (do not use elements above toc marker)",
       `
 # title
 
@@ -226,8 +226,8 @@ this is a text
 
 <!-- tocstop -->
 
-# onE 
-## oNe one      
+# onE
+## oNe one
     `,
       `
 <!-- toc -->
@@ -239,31 +239,35 @@ this is a text
     `
     ],
     [
-      '***************************** properly handle generation of not completed TOC',
+      "***************************** properly handle generation of not completed TOC",
       `
 # hoge
 
-##     
+##
     `,
       `
 <!-- toc -->
 
 - [hoge](#hoge)
 
-<!-- tocstop -->  
+<!-- tocstop -->
     `
     ]
-  ]
+  ];
 
   testCases.forEach(testCase => {
-    const title = testCase[0]
-    const inputMd = testCase[1].trim()
-    const expectedToc = testCase[2].trim()
-    const generatedToc = markdownToc.generate(inputMd)
+    const title = testCase[0];
+    const inputMd = testCase[1].trim();
+    const expectedToc = testCase[2].trim();
+    const generatedToc = markdownToc.generate(inputMd);
 
-    t.is(generatedToc, expectedToc, `generate test : ${title} , generated : ${EOL}${generatedToc}, expected : ${EOL}${expectedToc}`)
-  })
-})
+    t.is(
+      generatedToc,
+      expectedToc,
+      `generate test : ${title} , generated : ${EOL}${generatedToc}, expected : ${EOL}${expectedToc}`
+    );
+  });
+});
 
 test(t => {
   /**
@@ -279,7 +283,7 @@ test(t => {
   const testCases = [
     [
       `***************************** Empty note, cursor at the top`,
-      {line: 0, ch: 0},
+      { line: 0, ch: 0 },
       ``,
       `
 <!-- toc -->
@@ -291,7 +295,7 @@ test(t => {
     ],
     [
       `***************************** Two level note,TOC at the beginning `,
-      {line: 0, ch: 0},
+      { line: 0, ch: 0 },
       `
 # one
 this is a level one text
@@ -324,14 +328,14 @@ this is a level one text
   this is a level two text
 ## two two
   this is a level two two text
-  this is a level two two text      
+  this is a level two two text
       `
     ],
     [
       `***************************** Two level note, cursor just after 'header text' `,
-      {line: 1, ch: 12},
+      { line: 1, ch: 12 },
       `
-# header 
+# header
  header text
 
 # one
@@ -344,10 +348,10 @@ this is a level one text
   this is a level two text
 ## two two
   this is a level two two text
-  this is a level two two text   
+  this is a level two two text
       `,
       `
-# header 
+# header
  header text
 <!-- toc -->
 
@@ -373,9 +377,9 @@ this is a level one text
     ],
     [
       `***************************** Two level note, cursor at empty line under 'header text' `,
-      {line: 2, ch: 0},
+      { line: 2, ch: 0 },
       `
-# header 
+# header
  header text
 
 # one
@@ -391,7 +395,7 @@ this is a level one text
   this is a level two two text
       `,
       `
-# header 
+# header
  header text
 <!-- toc -->
 
@@ -416,9 +420,9 @@ this is a level one text
     ],
     [
       `***************************** Two level note, cursor just before 'text' word`,
-      {line: 1, ch: 8},
+      { line: 1, ch: 8 },
       `
-# header 
+# header
  header text
 
 # one
@@ -434,8 +438,8 @@ this is a level one text
   this is a level two two text
       `,
       `
-# header 
- header 
+# header
+ header
 <!-- toc -->
 
 - [one](#one)
@@ -461,9 +465,9 @@ this is a level one text
     ],
     [
       `***************************** Already generated TOC without header file, regenerate TOC in place, no changes`,
-      {line: 13, ch: 0},
+      { line: 13, ch: 0 },
       `
-# header 
+# header
  header text
 <!-- toc -->
 
@@ -486,7 +490,7 @@ this is a level one text
   this is a level two two text
       `,
       `
-# header 
+# header
  header text
 <!-- toc -->
 
@@ -511,9 +515,9 @@ this is a level one text
     ],
     [
       `***************************** Already generated TOC, needs updating in place`,
-      {line: 0, ch: 0},
+      { line: 0, ch: 0 },
       `
-# header 
+# header
  header text
 <!-- toc -->
 
@@ -523,7 +527,7 @@ this is a level one text
   * [two two](#two-two)
 
 <!-- tocstop -->
-# This is the one 
+# This is the one
 this is a level one text
 this is a level one text
 
@@ -536,7 +540,7 @@ this is a level one text
   this is a level two two text
       `,
       `
-# header 
+# header
  header text
 <!-- toc -->
 
@@ -546,7 +550,7 @@ this is a level one text
   * [two two](#two-two)
 
 <!-- tocstop -->
-# This is the one 
+# This is the one
 this is a level one text
 this is a level one text
 
@@ -561,12 +565,12 @@ this is a level one text
     ],
     [
       `***************************** Document with cursor at the last line, expecting empty TOC `,
-      {line: 13, ch: 30},
+      { line: 13, ch: 30 },
       `
-# header 
+# header
  header text
 
-# This is the one 
+# This is the one
 this is a level one text
 this is a level one text
 
@@ -579,10 +583,10 @@ this is a level one text
   this is a level two two text
       `,
       `
-# header 
+# header
  header text
 
-# This is the one 
+# This is the one
 this is a level one text
 this is a level one text
 
@@ -602,12 +606,12 @@ this is a level one text
     ],
     [
       `***************************** Empty, not actual TOC , should be supplemented with two new points beneath`,
-      {line: 0, ch: 0},
+      { line: 0, ch: 0 },
       `
-# header 
+# header
  header text
 
-# This is the one 
+# This is the one
 this is a level one text
 this is a level one text
 
@@ -627,10 +631,10 @@ this is a level one text
 ## new subpoint
       `,
       `
-# header 
+# header
  header text
 
-# This is the one 
+# This is the one
 this is a level one text
 this is a level one text
 
@@ -651,18 +655,22 @@ this is a level one text
 ## new subpoint
       `
     ]
-  ]
+  ];
   testCases.forEach(testCase => {
-    const title = testCase[0]
-    const cursor = testCase[1]
-    const inputMd = testCase[2].trim()
-    const expectedMd = testCase[3].trim()
+    const title = testCase[0];
+    const cursor = testCase[1];
+    const inputMd = testCase[2].trim();
+    const expectedMd = testCase[3].trim();
 
-    const editor = CodeMirror()
-    editor.setValue(inputMd)
-    editor.setCursor(cursor)
-    markdownToc.generateInEditor(editor)
+    const editor = CodeMirror();
+    editor.setValue(inputMd);
+    editor.setCursor(cursor);
+    markdownToc.generateInEditor(editor);
 
-    t.is(expectedMd, editor.getValue(), `generateInEditor test : ${title} , generated : ${EOL}${editor.getValue()}, expected : ${EOL}${expectedMd}`)
-  })
-})
+    t.is(
+      expectedMd,
+      editor.getValue(),
+      `generateInEditor test : ${title} , generated : ${EOL}${editor.getValue()}, expected : ${EOL}${expectedMd}`
+    );
+  });
+});

@@ -1,11 +1,11 @@
-import mock from 'mock-require'
+import mock from "mock-require";
 
-const noop = () => {}
+const noop = () => {};
 
-mock('electron', {
+mock("electron", {
   remote: {
     app: {
       getAppPath: noop
     }
   }
-})
+});

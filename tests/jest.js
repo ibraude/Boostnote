@@ -2,11 +2,11 @@
 global.Raphael = {
   setWindow: jest.fn(),
   registerFont: jest.fn(),
-  fn: function () {
-    return {}
+  fn: function() {
+    return {};
   }
-}
+};
 
 global._ = {
   extend: jest.genMockFunction()
-}
+};

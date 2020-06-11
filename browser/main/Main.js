@@ -1,35 +1,35 @@
-import PropTypes from 'prop-types'
-import React from 'react'
-import CSSModules from 'browser/lib/CSSModules'
-import styles from './Main.styl'
-import { connect } from 'react-redux'
-import SideNav from './SideNav'
-import TopBar from './TopBar'
-import NoteList from './NoteList'
-import Detail from './Detail'
-import dataApi from 'browser/main/lib/dataApi'
-import _ from 'lodash'
-import ConfigManager from 'browser/main/lib/ConfigManager'
-import mobileAnalytics from 'browser/main/lib/AwsMobileAnalyticsConfig'
-import eventEmitter from 'browser/main/lib/eventEmitter'
-import { store } from 'browser/main/store'
-import i18n from 'browser/lib/i18n'
-import { getLocales } from 'browser/lib/Languages'
-import applyShortcuts from 'browser/main/lib/shortcutManager'
-import { push } from 'connected-react-router'
-const path = require('path')
-const electron = require('electron')
-const { remote } = electron
+import PropTypes from "prop-types";
+import React from "react";
+import CSSModules from "browser/lib/CSSModules";
+import styles from "./Main.styl";
+import { connect } from "react-redux";
+import SideNav from "./SideNav";
+import TopBar from "./TopBar";
+import NoteList from "./NoteList";
+import Detail from "./Detail";
+import dataApi from "browser/main/lib/dataApi";
+import _ from "lodash";
+import ConfigManager from "browser/main/lib/ConfigManager";
+import mobileAnalytics from "browser/main/lib/AwsMobileAnalyticsConfig";
+import eventEmitter from "browser/main/lib/eventEmitter";
+import { store } from "browser/main/store";
+import i18n from "browser/lib/i18n";
+import { getLocales } from "browser/lib/Languages";
+import applyShortcuts from "browser/main/lib/shortcutManager";
+import { push } from "connected-react-router";
+const path = require("path");
+const electron = require("electron");
+const { remote } = electron;
 
 class Main extends React.Component {
-  constructor (props) {
-    super(props)
+  constructor(props) {
+    super(props);
 
-    if (process.env.NODE_ENV === 'production') {
-      mobileAnalytics.initAwsMobileAnalytics()
+    if (process.env.NODE_ENV === "production") {
+      mobileAnalytics.initAwsMobileAnalytics();
     }
 
-    const { config } = props
+    const { config } = props;
 
     this.state = {
       isRightSliderFocused: false,
@@ -39,172 +39,188 @@ class Main extends React.Component {
       fullScreen: false,
       noteDetailWidth: 0,
       mainBodyWidth: 0
-    }
+    };
 
-    this.toggleFullScreen = () => this.handleFullScreenButton()
+    this.toggleFullScreen = () => this.handleFullScreenButton();
   }
 
-  getChildContext () {
-    const { status, config } = this.props
+  getChildContext() {
+    const { status, config } = this.props;
 
     return {
       status,
       config
-    }
+    };
   }
 
-  init () {
+  init() {
     dataApi
       .addStorage({
-        name: 'My Storage Location',
-        path: path.join(remote.app.getPath('home'), 'Boostnote')
+        name: "My Storage Location",
+        path: path.join(remote.app.getPath("home"), "Boostnote")
       })
       .then(data => {
-        return data
+        return data;
       })
       .then(data => {
         if (data.storage.folders[0] != null) {
-          return data
+          return data;
         } else {
           return dataApi
             .createFolder(data.storage.key, {
-              color: '#1278BD',
-              name: 'Default'
+              color: "#1278BD",
+              name: "Default"
             })
             .then(_data => {
               return {
                 storage: _data.storage,
                 notes: data.notes
-              }
-            })
+              };
+            });
         }
       })
       .then(data => {
         store.dispatch({
-          type: 'ADD_STORAGE',
+          type: "ADD_STORAGE",
           storage: data.storage,
           notes: data.notes
-        })
+        });
 
         const defaultSnippetNote = dataApi
           .createNote(data.storage.key, {
-            type: 'SNIPPET_NOTE',
+            type: "SNIPPET_NOTE",
             folder: data.storage.folders[0].key,
-            title: 'Snippet note example',
-            description: 'Snippet note example\nYou can store a series of snippets as a single note, like Gist.',
+            title: "Snippet note example",
+            description:
+              "Snippet note example\nYou can store a series of snippets as a single note, like Gist.",
             snippets: [
               {
-                name: 'example.html',
-                mode: 'html',
-                content: "<html>\n<body>\n<h1 id='hello'>Enjoy Boostnote!</h1>\n</body>\n</html>",
+                name: "example.html",
+                mode: "html",
+                content:
+                  "<html>\n<body>\n<h1 id='hello'>Enjoy Boostnote!</h1>\n</body>\n</html>",
                 linesHighlighted: []
               },
               {
-                name: 'example.js',
-                mode: 'javascript',
-                content: "var boostnote = document.getElementById('hello').innerHTML\n\nconsole.log(boostnote)",
+                name: "example.js",
+                mode: "javascript",
+                content:
+                  "var boostnote = document.getElementById('hello').innerHTML\n\nconsole.log(boostnote)",
                 linesHighlighted: []
               }
             ]
           })
           .then(note => {
             store.dispatch({
-              type: 'UPDATE_NOTE',
+              type: "UPDATE_NOTE",
               note: note
-            })
-          })
+            });
+          });
         const defaultMarkdownNote = dataApi
           .createNote(data.storage.key, {
-            type: 'MARKDOWN_NOTE',
+            type: "MARKDOWN_NOTE",
             folder: data.storage.folders[0].key,
-            title: 'Welcome to Boostnote!',
-            content: '# Welcome to Boostnote!\n## Click here to edit markdown :wave:\n\n<iframe width="560" height="315" src="https://www.youtube.com/embed/L0qNPLsvmyM" frameborder="0" allowfullscreen></iframe>\n\n## Docs :memo:\n- [Boostnote | Boost your happiness, productivity and creativity.](https://hackernoon.com/boostnote-boost-your-happiness-productivity-and-creativity-315034efeebe)\n- [Cloud Syncing & Backups](https://github.com/BoostIO/Boostnote/wiki/Cloud-Syncing-and-Backup)\n- [How to sync your data across Desktop and Mobile apps](https://github.com/BoostIO/Boostnote/wiki/Sync-Data-Across-Desktop-and-Mobile-apps)\n- [Convert data from **Evernote** to Boostnote.](https://github.com/BoostIO/Boostnote/wiki/Evernote)\n- [Keyboard Shortcuts](https://github.com/BoostIO/Boostnote/wiki/Keyboard-Shortcuts)\n- [Keymaps in Editor mode](https://github.com/BoostIO/Boostnote/wiki/Keymaps-in-Editor-mode)\n- [How to set syntax highlight in Snippet note](https://github.com/BoostIO/Boostnote/wiki/Syntax-Highlighting)\n\n---\n\n## Article Archive :books:\n- [Reddit English](http://bit.ly/2mOJPu7)\n- [Reddit Spanish](https://www.reddit.com/r/boostnote_es/)\n- [Reddit Chinese](https://www.reddit.com/r/boostnote_cn/)\n- [Reddit Japanese](https://www.reddit.com/r/boostnote_jp/)\n\n---\n\n## Community :beers:\n- [GitHub](http://bit.ly/2AWWzkD)\n- [Twitter](http://bit.ly/2z8BUJZ)\n- [Facebook Group](http://bit.ly/2jcca8t)'
+            title: "Welcome to Boostnote!",
+            content:
+              '# Welcome to Boostnote!\n## Click here to edit markdown :wave:\n\n<iframe width="560" height="315" src="https://www.youtube.com/embed/L0qNPLsvmyM" frameborder="0" allowfullscreen></iframe>\n\n## Docs :memo:\n- [Boostnote | Boost your happiness, productivity and creativity.](https://hackernoon.com/boostnote-boost-your-happiness-productivity-and-creativity-315034efeebe)\n- [Cloud Syncing & Backups](https://github.com/BoostIO/Boostnote/wiki/Cloud-Syncing-and-Backup)\n- [How to sync your data across Desktop and Mobile apps](https://github.com/BoostIO/Boostnote/wiki/Sync-Data-Across-Desktop-and-Mobile-apps)\n- [Convert data from **Evernote** to Boostnote.](https://github.com/BoostIO/Boostnote/wiki/Evernote)\n- [Keyboard Shortcuts](https://github.com/BoostIO/Boostnote/wiki/Keyboard-Shortcuts)\n- [Keymaps in Editor mode](https://github.com/BoostIO/Boostnote/wiki/Keymaps-in-Editor-mode)\n- [How to set syntax highlight in Snippet note](https://github.com/BoostIO/Boostnote/wiki/Syntax-Highlighting)\n\n---\n\n## Article Archive :books:\n- [Reddit English](http://bit.ly/2mOJPu7)\n- [Reddit Spanish](https://www.reddit.com/r/boostnote_es/)\n- [Reddit Chinese](https://www.reddit.com/r/boostnote_cn/)\n- [Reddit Japanese](https://www.reddit.com/r/boostnote_jp/)\n\n---\n\n## Community :beers:\n- [GitHub](http://bit.ly/2AWWzkD)\n- [Twitter](http://bit.ly/2z8BUJZ)\n- [Facebook Group](http://bit.ly/2jcca8t)'
           })
           .then(note => {
             store.dispatch({
-              type: 'UPDATE_NOTE',
+              type: "UPDATE_NOTE",
               note: note
-            })
-          })
+            });
+          });
 
         return Promise.resolve(defaultSnippetNote)
           .then(defaultMarkdownNote)
-          .then(() => data.storage)
+          .then(() => data.storage);
       })
       .then(storage => {
-        store.dispatch(push('/storages/' + storage.key))
+        store.dispatch(push("/storages/" + storage.key));
       })
       .catch(err => {
-        throw err
-      })
+        throw err;
+      });
   }
 
-  componentDidMount () {
-    const { dispatch, config } = this.props
+  componentDidMount() {
+    const { dispatch, config } = this.props;
 
-    const supportedThemes = ['dark', 'white', 'solarized-dark', 'monokai', 'dracula']
+    const supportedThemes = [
+      "dark",
+      "white",
+      "solarized-dark",
+      "monokai",
+      "dracula"
+    ];
 
     if (supportedThemes.indexOf(config.ui.theme) !== -1) {
-      document.body.setAttribute('data-theme', config.ui.theme)
+      document.body.setAttribute("data-theme", config.ui.theme);
     } else {
-      document.body.setAttribute('data-theme', 'default')
+      document.body.setAttribute("data-theme", "default");
     }
 
     if (getLocales().indexOf(config.ui.language) !== -1) {
-      i18n.setLocale(config.ui.language)
+      i18n.setLocale(config.ui.language);
     } else {
-      i18n.setLocale('en')
+      i18n.setLocale("en");
     }
-    applyShortcuts()
+    applyShortcuts();
     // Reload all data
     dataApi.init().then(data => {
       dispatch({
-        type: 'INIT_ALL',
+        type: "INIT_ALL",
         storages: data.storages,
         notes: data.notes
-      })
+      });
 
       if (data.storages.length < 1) {
-        this.init()
+        this.init();
       }
-    })
+    });
 
     // eslint-disable-next-line no-undef
-    delete CodeMirror.keyMap.emacs['Ctrl-V']
+    delete CodeMirror.keyMap.emacs["Ctrl-V"];
 
-    eventEmitter.on('editor:fullscreen', this.toggleFullScreen)
-    eventEmitter.on('menubar:togglemenubar', this.toggleMenuBarVisible.bind(this))
+    eventEmitter.on("editor:fullscreen", this.toggleFullScreen);
+    eventEmitter.on(
+      "menubar:togglemenubar",
+      this.toggleMenuBarVisible.bind(this)
+    );
   }
 
-  componentWillUnmount () {
-    eventEmitter.off('editor:fullscreen', this.toggleFullScreen)
-    eventEmitter.off('menubar:togglemenubar', this.toggleMenuBarVisible.bind(this))
+  componentWillUnmount() {
+    eventEmitter.off("editor:fullscreen", this.toggleFullScreen);
+    eventEmitter.off(
+      "menubar:togglemenubar",
+      this.toggleMenuBarVisible.bind(this)
+    );
   }
 
-  toggleMenuBarVisible () {
-    const { config } = this.props
-    const { ui } = config
+  toggleMenuBarVisible() {
+    const { config } = this.props;
+    const { ui } = config;
 
-    const newUI = Object.assign(ui, {showMenuBar: !ui.showMenuBar})
-    const newConfig = Object.assign(config, newUI)
-    ConfigManager.set(newConfig)
+    const newUI = Object.assign(ui, { showMenuBar: !ui.showMenuBar });
+    const newConfig = Object.assign(config, newUI);
+    ConfigManager.set(newConfig);
   }
 
-  handleLeftSlideMouseDown (e) {
-    e.preventDefault()
+  handleLeftSlideMouseDown(e) {
+    e.preventDefault();
     this.setState({
       isLeftSliderFocused: true
-    })
+    });
   }
 
-  handleRightSlideMouseDown (e) {
-    e.preventDefault()
+  handleRightSlideMouseDown(e) {
+    e.preventDefault();
     this.setState({
       isRightSliderFocused: true
-    })
+    });
   }
 
-  handleMouseUp (e) {
+  handleMouseUp(e) {
     // Change width of NoteList component.
     if (this.state.isRightSliderFocused) {
       this.setState(
@@ -212,16 +228,16 @@ class Main extends React.Component {
           isRightSliderFocused: false
         },
         () => {
-          const { dispatch } = this.props
-          const newListWidth = this.state.listWidth
+          const { dispatch } = this.props;
+          const newListWidth = this.state.listWidth;
           // TODO: ConfigManager should dispatch itself.
-          ConfigManager.set({ listWidth: newListWidth })
+          ConfigManager.set({ listWidth: newListWidth });
           dispatch({
-            type: 'SET_LIST_WIDTH',
+            type: "SET_LIST_WIDTH",
             listWidth: newListWidth
-          })
+          });
         }
-      )
+      );
     }
 
     // Change width of SideNav component.
@@ -231,105 +247,112 @@ class Main extends React.Component {
           isLeftSliderFocused: false
         },
         () => {
-          const { dispatch } = this.props
-          const navWidth = this.state.navWidth
+          const { dispatch } = this.props;
+          const navWidth = this.state.navWidth;
           // TODO: ConfigManager should dispatch itself.
-          ConfigManager.set({ navWidth })
+          ConfigManager.set({ navWidth });
           dispatch({
-            type: 'SET_NAV_WIDTH',
+            type: "SET_NAV_WIDTH",
             navWidth
-          })
+          });
         }
-      )
+      );
     }
   }
 
-  handleMouseMove (e) {
+  handleMouseMove(e) {
     if (this.state.isRightSliderFocused) {
-      const offset = this.refs.body.getBoundingClientRect().left
-      let newListWidth = e.pageX - offset
+      const offset = this.refs.body.getBoundingClientRect().left;
+      let newListWidth = e.pageX - offset;
       if (newListWidth < 180) {
-        newListWidth = 180
+        newListWidth = 180;
       } else if (newListWidth > 600) {
-        newListWidth = 600
+        newListWidth = 600;
       }
       this.setState({
         listWidth: newListWidth
-      })
+      });
     }
     if (this.state.isLeftSliderFocused) {
-      let navWidth = e.pageX
+      let navWidth = e.pageX;
       if (navWidth < 80) {
-        navWidth = 80
+        navWidth = 80;
       } else if (navWidth > 600) {
-        navWidth = 600
+        navWidth = 600;
       }
       this.setState({
         navWidth: navWidth
-      })
+      });
     }
   }
 
-  handleFullScreenButton (e) {
+  handleFullScreenButton(e) {
     this.setState({ fullScreen: !this.state.fullScreen }, () => {
-      const noteDetail = document.querySelector('.NoteDetail')
-      const noteList = document.querySelector('.NoteList')
-      const mainBody = document.querySelector('#main-body')
+      const noteDetail = document.querySelector(".NoteDetail");
+      const noteList = document.querySelector(".NoteList");
+      const mainBody = document.querySelector("#main-body");
 
       if (this.state.fullScreen) {
-        this.hideLeftLists(noteDetail, noteList, mainBody)
+        this.hideLeftLists(noteDetail, noteList, mainBody);
       } else {
-        this.showLeftLists(noteDetail, noteList, mainBody)
+        this.showLeftLists(noteDetail, noteList, mainBody);
       }
-    })
+    });
   }
 
-  hideLeftLists (noteDetail, noteList, mainBody) {
-    this.setState({ noteDetailWidth: noteDetail.style.left })
-    this.setState({ mainBodyWidth: mainBody.style.left })
-    noteDetail.style.left = '0px'
-    mainBody.style.left = '0px'
-    noteList.style.display = 'none'
+  hideLeftLists(noteDetail, noteList, mainBody) {
+    this.setState({ noteDetailWidth: noteDetail.style.left });
+    this.setState({ mainBodyWidth: mainBody.style.left });
+    noteDetail.style.left = "0px";
+    mainBody.style.left = "0px";
+    noteList.style.display = "none";
   }
 
-  showLeftLists (noteDetail, noteList, mainBody) {
-    noteDetail.style.left = this.state.noteDetailWidth
-    mainBody.style.left = this.state.mainBodyWidth
-    noteList.style.display = 'inline'
+  showLeftLists(noteDetail, noteList, mainBody) {
+    noteDetail.style.left = this.state.noteDetailWidth;
+    mainBody.style.left = this.state.mainBodyWidth;
+    noteList.style.display = "inline";
   }
 
-  render () {
-    const { config } = this.props
+  render() {
+    const { config } = this.props;
 
     // the width of the navigation bar when it is folded/collapsed
-    const foldedNavigationWidth = 44
+    const foldedNavigationWidth = 44;
 
     return (
       <div
-        className='Main'
-        styleName='root'
+        className="Main"
+        styleName="root"
         onMouseMove={e => this.handleMouseMove(e)}
         onMouseUp={e => this.handleMouseUp(e)}
       >
         <SideNav
-          {..._.pick(this.props, ['dispatch', 'data', 'config', 'match', 'location'])}
+          {..._.pick(this.props, [
+            "dispatch",
+            "data",
+            "config",
+            "match",
+            "location"
+          ])}
           width={this.state.navWidth}
         />
-        {!config.isSideNavFolded &&
+        {!config.isSideNavFolded && (
           <div
             styleName={
-              this.state.isLeftSliderFocused ? 'slider--active' : 'slider'
+              this.state.isLeftSliderFocused ? "slider--active" : "slider"
             }
             style={{ left: this.state.navWidth }}
             onMouseDown={e => this.handleLeftSlideMouseDown(e)}
-            draggable='false'
+            draggable="false"
           >
-            <div styleName='slider-hitbox' />
-          </div>}
+            <div styleName="slider-hitbox" />
+          </div>
+        )}
         <div
-          styleName={config.isSideNavFolded ? 'body--expanded' : 'body'}
-          id='main-body'
-          ref='body'
+          styleName={config.isSideNavFolded ? "body--expanded" : "body"}
+          id="main-body"
+          ref="body"
           style={{
             left: config.isSideNavFolded
               ? foldedNavigationWidth
@@ -339,49 +362,49 @@ class Main extends React.Component {
           <TopBar
             style={{ width: this.state.listWidth }}
             {..._.pick(this.props, [
-              'dispatch',
-              'config',
-              'data',
-              'match',
-              'location'
+              "dispatch",
+              "config",
+              "data",
+              "match",
+              "location"
             ])}
           />
           <NoteList
             style={{ width: this.state.listWidth }}
             {..._.pick(this.props, [
-              'dispatch',
-              'data',
-              'config',
-              'match',
-              'location'
+              "dispatch",
+              "data",
+              "config",
+              "match",
+              "location"
             ])}
           />
           <div
             styleName={
               this.state.isRightSliderFocused
-                ? 'slider-right--active'
-                : 'slider-right'
+                ? "slider-right--active"
+                : "slider-right"
             }
             style={{ left: this.state.listWidth - 1 }}
             onMouseDown={e => this.handleRightSlideMouseDown(e)}
-            draggable='false'
+            draggable="false"
           >
-            <div styleName='slider-hitbox' />
+            <div styleName="slider-hitbox" />
           </div>
           <Detail
             style={{ left: this.state.listWidth }}
             {..._.pick(this.props, [
-              'dispatch',
-              'data',
-              'config',
-              'match',
-              'location'
+              "dispatch",
+              "data",
+              "config",
+              "match",
+              "location"
             ])}
             ignorePreviewPointerEvents={this.state.isRightSliderFocused}
           />
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -390,11 +413,11 @@ Main.childContextTypes = {
     updateReady: PropTypes.bool.isRequired
   }).isRequired,
   config: PropTypes.shape({}).isRequired
-}
+};
 
 Main.propTypes = {
   dispatch: PropTypes.func,
   data: PropTypes.shape({}).isRequired
-}
+};
 
-export default connect(x => x)(CSSModules(Main, styles))
+export default connect(x => x)(CSSModules(Main, styles));
