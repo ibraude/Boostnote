@@ -27,28 +27,28 @@ const basic = `
 - [GitHub](http://bit.ly/2AWWzkD)
 - [Twitter](http://bit.ly/2z8BUJZ)
 - [Facebook Group](http://bit.ly/2jcca8t)
-`;
+`
 
 const codeblock = `
 \`\`\`js:filename.js:2
 var project = 'boostnote';
 \`\`\`
-`;
+`
 
 const katex = `
 $$
 c = \pm\sqrt{a^2 + b^2}
 $$
-`;
+`
 
 const checkboxes = `
 - [ ] Unchecked
 - [x] Checked
-`;
+`
 
-const smartQuotes = 'This is a "QUOTE".';
+const smartQuotes = 'This is a "QUOTE".'
 
-const breaks = "This is the first line.\nThis is the second line.";
+const breaks = 'This is the first line.\nThis is the second line.'
 
 const abbrevations = `
 ## abbr
@@ -58,19 +58,19 @@ is maintained by the W3C.
 
 *[HTML]: Hyper Text Markup Language
 *[W3C]:  World Wide Web Consortium
-`;
+`
 
 const subTexts = `
 ## sub
 
 H~2~0
-`;
+`
 
 const supTexts = `
 ## sup
 
 29^th^
-`;
+`
 
 const deflists = `
 ## definition list
@@ -101,13 +101,13 @@ Term 2 with *inline markup*
         { some code, part of Definition 2 }
 
     Third paragraph of definition 2.
-`;
-const shortcuts = "<kbd>Ctrl</kbd>\n\n[[Ctrl]]";
+`
+const shortcuts = '<kbd>Ctrl</kbd>\n\n[[Ctrl]]'
 
 const footnote = `
 ^[hello-world]
 hello-world: https://github.com/BoostIO/Boostnote/
-`;
+`
 
 const tocPlaceholder = `
 [TOC]
@@ -115,7 +115,7 @@ const tocPlaceholder = `
 ## H2
 ### H3
 ###$ H4
-`;
+`
 
 const plantUmlMindMap = `
 @startmindmap
@@ -132,7 +132,7 @@ const plantUmlMindMap = `
 *** <s>Raspmbc</s> => OSMC
 *** <s>Raspyfi</s> => Volumio
 @endmindmap
-`;
+`
 
 const plantUmlGantt = `
 @startgantt
@@ -140,7 +140,7 @@ const plantUmlGantt = `
 [Test prototype] lasts 10 days
 [Test prototype] starts at [Prototype design]'s end
 @endgantt
-`;
+`
 
 const plantUmlWbs = `
 @startwbs
@@ -156,7 +156,7 @@ const plantUmlWbs = `
 *** Identify Quick Wins
 ** Complete innovate phase
 @endwbs
-`;
+`
 
 const plantUmlUml = `
 @startuml
@@ -171,7 +171,7 @@ rectangle checkout {
   (checkout) -- clerk
 }
 @enduml
-`;
+`
 
 const plantUmlDitaa = `
 @startditaa
@@ -185,7 +185,7 @@ const plantUmlDitaa = `
   |    Ein Haufen Arbeit    |
   +-------------------------+
 @endditaa
-`;
+`
 
 export default {
   basic,
@@ -206,4 +206,4 @@ export default {
   plantUmlWbs,
   plantUmlDitaa,
   plantUmlUml
-};
+}

@@ -1,70 +1,77 @@
-import PropTypes from "prop-types";
-import React from "react";
-import { push } from "connected-react-router";
-import CSSModules from "browser/lib/CSSModules";
-import dataApi from "browser/main/lib/dataApi";
-import styles from "./SideNav.styl";
-import { openModal } from "browser/main/lib/modal";
-import PreferencesModal from "../modals/PreferencesModal";
-import ConfigManager from "browser/main/lib/ConfigManager";
-import StorageItem from "./StorageItem";
-import TagListItem from "browser/components/TagListItem";
-import SideNavFilter from "browser/components/SideNavFilter";
-import StorageList from "browser/components/StorageList";
-import NavToggleButton from "browser/components/NavToggleButton";
-import EventEmitter from "browser/main/lib/eventEmitter";
-import PreferenceButton from "./PreferenceButton";
-import ListButton from "./ListButton";
-import TagButton from "./TagButton";
-import { SortableContainer } from "react-sortable-hoc";
-import i18n from "browser/lib/i18n";
-import context from "browser/lib/context";
-import { remote } from "electron";
-import { confirmDeleteNote } from "browser/lib/confirmDeleteNote";
-import ColorPicker from "browser/components/ColorPicker";
-import { every, sortBy } from "lodash";
+import PropTypes from 'prop-types'
+import React from 'react'
+import { push } from 'connected-react-router'
+import CSSModules from 'browser/lib/CSSModules'
+import dataApi from 'browser/main/lib/dataApi'
+import styles from './SideNav.styl'
+import { openModal } from 'browser/main/lib/modal'
+import PreferencesModal from '../modals/PreferencesModal'
+import RenameTagModal from 'browser/main/modals/RenameTagModal'
+import ConfigManager from 'browser/main/lib/ConfigManager'
+import StorageItem from './StorageItem'
+import TagListItem from 'browser/components/TagListItem'
+import SideNavFilter from 'browser/components/SideNavFilter'
+import StorageList from 'browser/components/StorageList'
+import NavToggleButton from 'browser/components/NavToggleButton'
+import EventEmitter from 'browser/main/lib/eventEmitter'
+import PreferenceButton from './PreferenceButton'
+import SearchButton from './SearchButton'
+import ListButton from './ListButton'
+import TagButton from './TagButton'
+import { SortableContainer } from 'react-sortable-hoc'
+import i18n from 'browser/lib/i18n'
+import context from 'browser/lib/context'
+import { remote } from 'electron'
+import { confirmDeleteNote } from 'browser/lib/confirmDeleteNote'
+import ColorPicker from 'browser/components/ColorPicker'
+import { every, sortBy } from 'lodash'
 
 function matchActiveTags(tags, activeTags) {
-  return every(activeTags, v => tags.indexOf(v) >= 0);
+  return every(activeTags, v => tags.indexOf(v) >= 0)
 }
 
 class SideNav extends React.Component {
   // TODO: should not use electron stuff v0.7
   constructor(props) {
-    super(props);
+    super(props)
 
     this.state = {
       colorPicker: {
         show: false,
         color: null,
         tagName: null,
-        targetRect: null
+        targetRect: null,
+        showSearch: false,
+        searchText: ''
       }
-    };
+    }
 
-    this.dismissColorPicker = this.dismissColorPicker.bind(this);
-    this.handleColorPickerConfirm = this.handleColorPickerConfirm.bind(this);
-    this.handleColorPickerReset = this.handleColorPickerReset.bind(this);
+    this.dismissColorPicker = this.dismissColorPicker.bind(this)
+    this.handleColorPickerConfirm = this.handleColorPickerConfirm.bind(this)
+    this.handleColorPickerReset = this.handleColorPickerReset.bind(this)
+    this.handleSearchButtonClick = this.handleSearchButtonClick.bind(this)
+    this.handleSearchInputChange = this.handleSearchInputChange.bind(this)
+    this.handleSearchInputClear = this.handleSearchInputClear.bind(this)
   }
 
   componentDidMount() {
-    EventEmitter.on("side:preferences", this.handleMenuButtonClick);
+    EventEmitter.on('side:preferences', this.handleMenuButtonClick)
   }
 
   componentWillUnmount() {
-    EventEmitter.off("side:preferences", this.handleMenuButtonClick);
+    EventEmitter.off('side:preferences', this.handleMenuButtonClick)
   }
 
   deleteTag(tag) {
     const selectedButton = remote.dialog.showMessageBox(
       remote.getCurrentWindow(),
       {
-        ype: "warning",
-        message: i18n.__("Confirm tag deletion"),
-        detail: i18n.__("This will permanently remove this tag."),
-        buttons: [i18n.__("Confirm"), i18n.__("Cancel")]
+        type: 'warning',
+        message: i18n.__('Confirm tag deletion'),
+        detail: i18n.__('This will permanently remove this tag.'),
+        buttons: [i18n.__('Confirm'), i18n.__('Cancel')]
       }
-    );
+    )
 
     if (selectedButton === 0) {
       const {
@@ -72,79 +79,104 @@ class SideNav extends React.Component {
         dispatch,
         location,
         match: { params }
-      } = this.props;
+      } = this.props
 
       const notes = data.noteMap
         .map(note => note)
         .filter(note => note.tags.indexOf(tag) !== -1)
         .map(note => {
-          note = Object.assign({}, note);
-          note.tags = note.tags.slice();
+          note = Object.assign({}, note)
+          note.tags = note.tags.slice()
 
-          note.tags.splice(note.tags.indexOf(tag), 1);
+          note.tags.splice(note.tags.indexOf(tag), 1)
 
-          return note;
-        });
+          return note
+        })
 
       Promise.all(
         notes.map(note => dataApi.updateNote(note.storage, note.key, note))
       ).then(updatedNotes => {
         updatedNotes.forEach(note => {
           dispatch({
-            type: "UPDATE_NOTE",
+            type: 'UPDATE_NOTE',
             note
-          });
-        });
+          })
+        })
 
-        if (location.pathname.match("/tags")) {
-          const tags = params.tagname.split(" ");
-          const index = tags.indexOf(tag);
+        if (location.pathname.match('/tags')) {
+          const tags = params.tagname.split(' ')
+          const index = tags.indexOf(tag)
           if (index !== -1) {
-            tags.splice(index, 1);
+            tags.splice(index, 1)
 
             dispatch(
               push(
-                `/tags/${tags.map(tag => encodeURIComponent(tag)).join(" ")}`
+                `/tags/${tags.map(tag => encodeURIComponent(tag)).join(' ')}`
               )
-            );
+            )
           }
         }
-      });
+      })
     }
   }
 
   handleMenuButtonClick(e) {
-    openModal(PreferencesModal);
+    openModal(PreferencesModal)
+  }
+
+  handleSearchButtonClick(e) {
+    const { showSearch } = this.state
+    this.setState({
+      showSearch: !showSearch,
+      searchText: ''
+    })
+  }
+
+  handleSearchInputClear(e) {
+    this.setState({
+      searchText: ''
+    })
+  }
+
+  handleSearchInputChange(e) {
+    this.setState({
+      searchText: e.target.value
+    })
   }
 
   handleHomeButtonClick(e) {
-    const { dispatch } = this.props;
-    dispatch(push("/home"));
+    const { dispatch } = this.props
+    dispatch(push('/home'))
   }
 
   handleStarredButtonClick(e) {
-    const { dispatch } = this.props;
-    dispatch(push("/starred"));
+    const { dispatch } = this.props
+    dispatch(push('/starred'))
   }
 
   handleTagContextMenu(e, tag) {
-    const menu = [];
+    const menu = []
 
     menu.push({
-      label: i18n.__("Delete Tag"),
+      label: i18n.__('Delete Tag'),
       click: this.deleteTag.bind(this, tag)
-    });
+    })
 
     menu.push({
-      label: i18n.__("Customize Color"),
+      label: i18n.__('Customize Color'),
       click: this.displayColorPicker.bind(
         this,
         tag,
         e.target.getBoundingClientRect()
       )
-    });
+    })
 
-    context.popup(menu);
+    menu.push({
+      label: i18n.__('Rename Tag'),
+      click: this.handleRenameTagClick.bind(this, tag)
+    })
+
+    context.popup(menu)
   }
 
   dismissColorPicker() {
@@ -152,11 +184,11 @@ class SideNav extends React.Component {
       colorPicker: {
         show: false
       }
-    });
+    })
   }
 
   displayColorPicker(tagName, rect) {
-    const { config } = this.props;
+    const { config } = this.props
     this.setState({
       colorPicker: {
         show: true,
@@ -164,99 +196,144 @@ class SideNav extends React.Component {
         tagName,
         targetRect: rect
       }
-    });
+    })
+  }
+
+  handleRenameTagClick(tagName) {
+    const { data, dispatch } = this.props
+
+    openModal(RenameTagModal, {
+      tagName,
+      data,
+      dispatch
+    })
   }
 
   handleColorPickerConfirm(color) {
     const {
       dispatch,
       config: { coloredTags }
-    } = this.props;
+    } = this.props
     const {
       colorPicker: { tagName }
-    } = this.state;
+    } = this.state
     const newColoredTags = Object.assign({}, coloredTags, {
       [tagName]: color.hex
-    });
+    })
 
-    const config = { coloredTags: newColoredTags };
-    ConfigManager.set(config);
+    const config = { coloredTags: newColoredTags }
+    ConfigManager.set(config)
     dispatch({
-      type: "SET_CONFIG",
+      type: 'SET_CONFIG',
       config
-    });
-    this.dismissColorPicker();
+    })
+    this.dismissColorPicker()
   }
 
   handleColorPickerReset() {
     const {
       dispatch,
       config: { coloredTags }
-    } = this.props;
+    } = this.props
     const {
       colorPicker: { tagName }
-    } = this.state;
-    const newColoredTags = Object.assign({}, coloredTags);
+    } = this.state
+    const newColoredTags = Object.assign({}, coloredTags)
 
-    delete newColoredTags[tagName];
+    delete newColoredTags[tagName]
 
-    const config = { coloredTags: newColoredTags };
-    ConfigManager.set(config);
+    const config = { coloredTags: newColoredTags }
+    ConfigManager.set(config)
     dispatch({
-      type: "SET_CONFIG",
+      type: 'SET_CONFIG',
       config
-    });
-    this.dismissColorPicker();
+    })
+    this.dismissColorPicker()
   }
 
   handleToggleButtonClick(e) {
-    const { dispatch, config } = this.props;
+    const { dispatch, config } = this.props
+    const { showSearch, searchText } = this.state
 
-    ConfigManager.set({ isSideNavFolded: !config.isSideNavFolded });
+    ConfigManager.set({ isSideNavFolded: !config.isSideNavFolded })
     dispatch({
-      type: "SET_IS_SIDENAV_FOLDED",
+      type: 'SET_IS_SIDENAV_FOLDED',
       isFolded: !config.isSideNavFolded
-    });
+    })
+
+    if (showSearch && searchText.length === 0) {
+      this.setState({
+        showSearch: false
+      })
+    }
   }
 
   handleTrashedButtonClick(e) {
-    const { dispatch } = this.props;
-    dispatch(push("/trashed"));
+    const { dispatch } = this.props
+    dispatch(push('/trashed'))
   }
 
   handleSwitchFoldersButtonClick() {
-    const { dispatch } = this.props;
-    dispatch(push("/home"));
+    const { dispatch } = this.props
+    dispatch(push('/home'))
   }
 
   handleSwitchTagsButtonClick() {
-    const { dispatch } = this.props;
-    dispatch(push("/alltags"));
+    const { dispatch } = this.props
+    dispatch(push('/alltags'))
   }
 
   onSortEnd(storage) {
     return ({ oldIndex, newIndex }) => {
-      const { dispatch } = this.props;
+      const { dispatch } = this.props
       dataApi.reorderFolder(storage.key, oldIndex, newIndex).then(data => {
-        dispatch({ type: "REORDER_FOLDER", storage: data.storage });
-      });
-    };
+        dispatch({ type: 'REORDER_FOLDER', storage: data.storage })
+      })
+    }
   }
 
-  SideNavComponent(isFolded, storageList) {
-    const { location, data, config } = this.props;
+  SideNavComponent(isFolded) {
+    const { location, data, config, dispatch } = this.props
+    const { showSearch, searchText } = this.state
 
-    const isHomeActive = !!location.pathname.match(/^\/home$/);
-    const isStarredActive = !!location.pathname.match(/^\/starred$/);
-    const isTrashedActive = !!location.pathname.match(/^\/trashed$/);
+    const isHomeActive = !!location.pathname.match(/^\/home$/)
+    const isStarredActive = !!location.pathname.match(/^\/starred$/)
+    const isTrashedActive = !!location.pathname.match(/^\/trashed$/)
 
-    let component;
+    let component
 
     // TagsMode is not selected
     if (
-      !location.pathname.match("/tags") &&
-      !location.pathname.match("/alltags")
+      !location.pathname.match('/tags') &&
+      !location.pathname.match('/alltags')
     ) {
+      let storageMap = data.storageMap
+      if (showSearch && searchText.length > 0) {
+        storageMap = storageMap.map(storage => {
+          const folders = storage.folders.filter(
+            folder =>
+              folder.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1
+          )
+          return Object.assign({}, storage, { folders })
+        })
+      }
+
+      const storageList = storageMap.map((storage, key) => {
+        const SortableStorageItem = SortableContainer(StorageItem)
+        return (
+          <SortableStorageItem
+            key={storage.key}
+            storage={storage}
+            data={data}
+            location={location}
+            isFolded={isFolded}
+            dispatch={dispatch}
+            onSortEnd={this.onSortEnd.bind(this)(storage)}
+            useDragHandle
+          />
+        )
+      })
+
       component = (
         <div>
           <SideNavFilter
@@ -283,48 +360,48 @@ class SideNav extends React.Component {
             handleToggleButtonClick={this.handleToggleButtonClick.bind(this)}
           />
         </div>
-      );
+      )
     } else {
       component = (
-        <div styleName="tabBody">
-          <div styleName="tag-control">
-            <div styleName="tag-control-title">
-              <p>{i18n.__("Tags")}</p>
+        <div styleName='tabBody'>
+          <div styleName='tag-control'>
+            <div styleName='tag-control-title'>
+              <p>{i18n.__('Tags')}</p>
             </div>
-            <div styleName="tag-control-sortTagsBy">
-              <i className="fa fa-angle-down" />
+            <div styleName='tag-control-sortTagsBy'>
+              <i className='fa fa-angle-down' />
               <select
-                styleName="tag-control-sortTagsBy-select"
-                title={i18n.__("Select filter mode")}
+                styleName='tag-control-sortTagsBy-select'
+                title={i18n.__('Select filter mode')}
                 value={config.sortTagsBy}
                 onChange={e => this.handleSortTagsByChange(e)}
               >
-                <option title="Sort alphabetically" value="ALPHABETICAL">
-                  {i18n.__("Alphabetically")}
+                <option title='Sort alphabetically' value='ALPHABETICAL'>
+                  {i18n.__('Alphabetically')}
                 </option>
-                <option title="Sort by update time" value="COUNTER">
-                  {i18n.__("Counter")}
+                <option title='Sort by update time' value='COUNTER'>
+                  {i18n.__('Counter')}
                 </option>
               </select>
             </div>
           </div>
-          <div styleName="tagList">{this.tagListComponent(data)}</div>
+          <div styleName='tagList'>{this.tagListComponent(data)}</div>
           <NavToggleButton
             isFolded={isFolded}
             handleToggleButtonClick={this.handleToggleButtonClick.bind(this)}
           />
         </div>
-      );
+      )
     }
 
-    return component;
+    return component
   }
 
   tagListComponent() {
-    const { data, location, config } = this.props;
-    const { colorPicker } = this.state;
-    const activeTags = this.getActiveTags(location.pathname);
-    const relatedTags = this.getRelatedTags(activeTags, data.noteMap);
+    const { data, location, config } = this.props
+    const { colorPicker, showSearch, searchText } = this.state
+    const activeTags = this.getActiveTags(location.pathname)
+    const relatedTags = this.getRelatedTags(activeTags, data.noteMap)
     let tagList = sortBy(
       data.tagNoteMap
         .map((tag, name) => ({
@@ -333,22 +410,27 @@ class SideNav extends React.Component {
           related: relatedTags.has(name)
         }))
         .filter(tag => tag.size > 0),
-      ["name"]
-    );
+      ['name']
+    )
+    if (showSearch && searchText.length > 0) {
+      tagList = tagList.filter(
+        tag => tag.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1
+      )
+    }
     if (config.ui.enableLiveNoteCounts && activeTags.length !== 0) {
-      const notesTags = data.noteMap.map(note => note.tags);
+      const notesTags = data.noteMap.map(note => note.tags)
       tagList = tagList.map(tag => {
         tag.size = notesTags.filter(
           tags => tags.includes(tag.name) && matchActiveTags(tags, activeTags)
-        ).length;
-        return tag;
-      });
+        ).length
+        return tag
+      })
     }
-    if (config.sortTagsBy === "COUNTER") {
-      tagList = sortBy(tagList, item => 0 - item.size);
+    if (config.sortTagsBy === 'COUNTER') {
+      tagList = sortBy(tagList, item => 0 - item.size)
     }
     if (config.ui.showOnlyRelatedTags && relatedTags.size > 0) {
-      tagList = tagList.filter(tag => tag.related);
+      tagList = tagList.filter(tag => tag.related)
     }
     return tagList.map(tag => {
       return (
@@ -366,117 +448,99 @@ class SideNav extends React.Component {
           count={tag.size}
           color={config.coloredTags[tag.name]}
         />
-      );
-    });
+      )
+    })
   }
 
   getRelatedTags(activeTags, noteMap) {
     if (activeTags.length === 0) {
-      return new Set();
+      return new Set()
     }
     const relatedNotes = noteMap
       .map(note => ({ key: note.key, tags: note.tags }))
-      .filter(note => activeTags.every(tag => note.tags.includes(tag)));
-    const relatedTags = new Set();
-    relatedNotes.forEach(note => note.tags.map(tag => relatedTags.add(tag)));
-    return relatedTags;
+      .filter(note => activeTags.every(tag => note.tags.includes(tag)))
+    const relatedTags = new Set()
+    relatedNotes.forEach(note => note.tags.map(tag => relatedTags.add(tag)))
+    return relatedTags
   }
 
   getTagActive(path, tag) {
-    return this.getActiveTags(path).includes(tag);
+    return this.getActiveTags(path).includes(tag)
   }
 
   getActiveTags(path) {
-    const pathSegments = path.split("/");
-    const tags = pathSegments[pathSegments.length - 1];
-    return tags === "alltags" ? [] : decodeURIComponent(tags).split(" ");
+    const pathSegments = path.split('/')
+    const tags = pathSegments[pathSegments.length - 1]
+    return tags === 'alltags' ? [] : decodeURIComponent(tags).split(' ')
   }
 
   handleClickTagListItem(name) {
-    const { dispatch } = this.props;
-    dispatch(push(`/tags/${encodeURIComponent(name)}`));
+    const { dispatch } = this.props
+    dispatch(push(`/tags/${encodeURIComponent(name)}`))
   }
 
   handleSortTagsByChange(e) {
-    const { dispatch } = this.props;
+    const { dispatch } = this.props
 
     const config = {
       sortTagsBy: e.target.value
-    };
+    }
 
-    ConfigManager.set(config);
+    ConfigManager.set(config)
     dispatch({
-      type: "SET_CONFIG",
+      type: 'SET_CONFIG',
       config
-    });
+    })
   }
 
   handleClickNarrowToTag(tag) {
-    const { dispatch, location } = this.props;
-    const listOfTags = this.getActiveTags(location.pathname);
-    const indexOfTag = listOfTags.indexOf(tag);
+    const { dispatch, location } = this.props
+    const listOfTags = this.getActiveTags(location.pathname)
+    const indexOfTag = listOfTags.indexOf(tag)
     if (indexOfTag > -1) {
-      listOfTags.splice(indexOfTag, 1);
+      listOfTags.splice(indexOfTag, 1)
     } else {
-      listOfTags.push(tag);
+      listOfTags.push(tag)
     }
-    dispatch(push(`/tags/${encodeURIComponent(listOfTags.join(" "))}`));
+    dispatch(push(`/tags/${encodeURIComponent(listOfTags.join(' '))}`))
   }
 
   emptyTrash(entries) {
-    const { dispatch } = this.props;
+    const { dispatch } = this.props
     const deletionPromises = entries.map(note => {
-      return dataApi.deleteNote(note.storage, note.key);
-    });
-    const { confirmDeletion } = this.props.config.ui;
-    if (!confirmDeleteNote(confirmDeletion, true)) return;
+      return dataApi.deleteNote(note.storage, note.key)
+    })
+    const { confirmDeletion } = this.props.config.ui
+    if (!confirmDeleteNote(confirmDeletion, true)) return
     Promise.all(deletionPromises)
       .then(arrayOfStorageAndNoteKeys => {
         arrayOfStorageAndNoteKeys.forEach(({ storageKey, noteKey }) => {
-          dispatch({ type: "DELETE_NOTE", storageKey, noteKey });
-        });
+          dispatch({ type: 'DELETE_NOTE', storageKey, noteKey })
+        })
       })
       .catch(err => {
-        console.error("Cannot Delete note: " + err);
-      });
+        console.error('Cannot Delete note: ' + err)
+      })
   }
 
   handleFilterButtonContextMenu(event) {
-    const { data } = this.props;
+    const { data } = this.props
     const trashedNotes = data.trashedSet
       .toJS()
-      .map(uniqueKey => data.noteMap.get(uniqueKey));
+      .map(uniqueKey => data.noteMap.get(uniqueKey))
     context.popup([
       {
-        label: i18n.__("Empty Trash"),
+        label: i18n.__('Empty Trash'),
         click: () => this.emptyTrash(trashedNotes)
       }
-    ]);
+    ])
   }
 
   render() {
-    const { data, location, config, dispatch } = this.props;
-    const { colorPicker: colorPickerState } = this.state;
+    const { location, config } = this.props
+    const { showSearch, searchText, colorPicker: colorPickerState } = this.state
 
-    const isFolded = config.isSideNavFolded;
-
-    const storageList = data.storageMap.map((storage, key) => {
-      const SortableStorageItem = SortableContainer(StorageItem);
-      return (
-        <SortableStorageItem
-          key={storage.key}
-          storage={storage}
-          data={data}
-          location={location}
-          isFolded={isFolded}
-          dispatch={dispatch}
-          onSortEnd={this.onSortEnd.bind(this)(storage)}
-          useDragHandle
-        />
-      );
-    });
-
-    let colorPicker;
+    let colorPicker
     if (colorPickerState.show) {
       colorPicker = (
         <ColorPicker
@@ -486,21 +550,47 @@ class SideNav extends React.Component {
           onCancel={this.dismissColorPicker}
           onReset={this.handleColorPickerReset}
         />
-      );
+      )
     }
 
-    const style = {};
-    if (!isFolded) style.width = this.props.width;
-    const isTagActive = /tag/.test(location.pathname);
+    const isFolded = config.isSideNavFolded
+    const style = {}
+    if (!isFolded) style.width = this.props.width
+    const isTagActive = /tag/.test(location.pathname)
+
+    const navSearch = (
+      <div styleName='search' style={{ maxHeight: showSearch ? '3em' : '0' }}>
+        <input
+          styleName='search-input'
+          type='text'
+          onChange={this.handleSearchInputChange}
+          value={searchText}
+          placeholder={i18n.__('Filter tags/folders...')}
+        />
+        <img
+          styleName='search-clear'
+          src='../resources/icon/icon-x.svg'
+          onClick={this.handleSearchInputClear}
+        />
+        {isFolded && (
+          <img
+            styleName='search-folded'
+            src='../resources/icon/icon-search-active.svg'
+            onClick={this.handleSearchButtonClick}
+          />
+        )}
+      </div>
+    )
+
     return (
       <div
-        className="SideNav"
-        styleName={isFolded ? "root--folded" : "root"}
-        tabIndex="1"
+        className='SideNav'
+        styleName={isFolded ? 'root--folded' : 'root'}
+        tabIndex='1'
         style={style}
       >
-        <div styleName="top">
-          <div styleName="switch-buttons">
+        <div styleName='top'>
+          <div styleName='switch-buttons'>
             <ListButton
               onClick={this.handleSwitchFoldersButtonClick.bind(this)}
               isTagActive={isTagActive}
@@ -510,20 +600,25 @@ class SideNav extends React.Component {
               isTagActive={isTagActive}
             />
           </div>
-          <div>
+          <div styleName='extra-buttons'>
+            <SearchButton
+              onClick={this.handleSearchButtonClick}
+              isActive={showSearch}
+            />
             <PreferenceButton onClick={this.handleMenuButtonClick} />
           </div>
         </div>
-        {this.SideNavComponent(isFolded, storageList)}
+        {navSearch}
+        {this.SideNavComponent(isFolded)}
         {colorPicker}
       </div>
-    );
+    )
   }
 }
 
 SideNav.contextTypes = {
   router: PropTypes.shape({})
-};
+}
 
 SideNav.propTypes = {
   dispatch: PropTypes.func,
@@ -534,6 +629,6 @@ SideNav.propTypes = {
   location: PropTypes.shape({
     pathname: PropTypes.string
   })
-};
+}
 
-export default CSSModules(SideNav, styles);
+export default CSSModules(SideNav, styles)

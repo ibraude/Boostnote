@@ -1,9 +1,9 @@
-import { findStorage } from "browser/lib/findStorage";
-import resolveStorageData from "./resolveStorageData";
-import resolveStorageNotes from "./resolveStorageNotes";
-import exportNote from "./exportNote";
-import filenamify from "filenamify";
-import * as path from "path";
+import { findStorage } from 'browser/lib/findStorage'
+import resolveStorageData from './resolveStorageData'
+import resolveStorageNotes from './resolveStorageNotes'
+import exportNote from './exportNote'
+import filenamify from 'filenamify'
+import * as path from 'path'
 
 /**
  * @param {String} storageKey
@@ -23,11 +23,11 @@ import * as path from "path";
  */
 
 function exportFolder(storageKey, folderKey, fileType, exportDir) {
-  let targetStorage;
+  let targetStorage
   try {
-    targetStorage = findStorage(storageKey);
+    targetStorage = findStorage(storageKey)
   } catch (e) {
-    return Promise.reject(e);
+    return Promise.reject(e)
   }
 
   return resolveStorageData(targetStorage)
@@ -36,11 +36,11 @@ function exportFolder(storageKey, folderKey, fileType, exportDir) {
         return {
           storage,
           notes
-        };
-      });
+        }
+      })
     })
     .then(function exportNotes(data) {
-      const { storage, notes } = data;
+      const { storage, notes } = data
 
       return Promise.all(
         notes
@@ -48,28 +48,28 @@ function exportFolder(storageKey, folderKey, fileType, exportDir) {
             note =>
               note.folder === folderKey &&
               note.isTrashed === false &&
-              note.type === "MARKDOWN_NOTE"
+              note.type === 'MARKDOWN_NOTE'
           )
           .map(note => {
             const notePath = path.join(
               exportDir,
-              `${filenamify(note.title, { replacement: "_" })}.${fileType}`
-            );
+              `${filenamify(note.title, { replacement: '_' })}.${fileType}`
+            )
             return exportNote(
               note.key,
               storage.path,
               note.content,
               notePath,
               null
-            );
+            )
           })
       ).then(() => ({
         storage,
         folderKey,
         fileType,
         exportDir
-      }));
-    });
+      }))
+    })
 }
 
-module.exports = exportFolder;
+module.exports = exportFolder

@@ -1,12 +1,12 @@
-import i18n from "browser/lib/i18n";
-import fs from "fs";
+import i18n from 'browser/lib/i18n'
+import fs from 'fs'
 
-const { remote } = require("electron");
-const { Menu } = remote.require("electron");
-const { clipboard } = remote.require("electron");
-const { shell } = remote.require("electron");
-const spellcheck = require("./spellcheck");
-const uri2path = require("file-uri-to-path");
+const { remote } = require('electron')
+const { Menu } = remote.require('electron')
+const { clipboard } = remote.require('electron')
+const { shell } = remote.require('electron')
+const spellcheck = require('./spellcheck')
+const uri2path = require('file-uri-to-path')
 
 /**
  * Creates the context menu that is shown when there is a right click in the editor of a (not-snippet) note.
@@ -23,46 +23,45 @@ const buildEditorContextMenu = function(editor, event) {
     event.pageX == null ||
     event.pageY == null
   ) {
-    return null;
+    return null
   }
-  const cursor = editor.coordsChar({ left: event.pageX, top: event.pageY });
-  const wordRange = editor.findWordAt(cursor);
-  const word = editor.getRange(wordRange.anchor, wordRange.head);
-  const existingMarks =
-    editor.findMarks(wordRange.anchor, wordRange.head) || [];
-  let isMisspelled = false;
+  const cursor = editor.coordsChar({ left: event.pageX, top: event.pageY })
+  const wordRange = editor.findWordAt(cursor)
+  const word = editor.getRange(wordRange.anchor, wordRange.head)
+  const existingMarks = editor.findMarks(wordRange.anchor, wordRange.head) || []
+  let isMisspelled = false
   for (const mark of existingMarks) {
     if (mark.className === spellcheck.getCSSClassName()) {
-      isMisspelled = true;
-      break;
+      isMisspelled = true
+      break
     }
   }
-  let suggestion = [];
+  let suggestion = []
   if (isMisspelled) {
-    suggestion = spellcheck.getSpellingSuggestion(word);
+    suggestion = spellcheck.getSpellingSuggestion(word)
   }
 
   const selection = {
     isMisspelled: isMisspelled,
     spellingSuggestions: suggestion
-  };
+  }
   const template = [
     {
-      role: "cut"
+      role: 'cut'
     },
     {
-      role: "copy"
+      role: 'copy'
     },
     {
-      role: "paste"
+      role: 'paste'
     },
     {
-      role: "selectall"
+      role: 'selectall'
     }
-  ];
+  ]
 
   if (selection.isMisspelled) {
-    const suggestions = selection.spellingSuggestions;
+    const suggestions = selection.spellingSuggestions
     template.unshift.apply(
       template,
       suggestions
@@ -75,18 +74,18 @@ const buildEditorContextMenu = function(editor, event) {
                   suggestion.label,
                   wordRange.anchor,
                   wordRange.head
-                );
+                )
               }
             }
-          };
+          }
         })
         .concat({
-          type: "separator"
+          type: 'separator'
         })
-    );
+    )
   }
-  return Menu.buildFromTemplate(template);
-};
+  return Menu.buildFromTemplate(template)
+}
 
 /**
  * Creates the context menu that is shown when there is a right click Markdown preview of a (not-snippet) note.
@@ -101,53 +100,53 @@ const buildMarkdownPreviewContextMenu = function(markdownPreview, event) {
     event.pageX == null ||
     event.pageY == null
   ) {
-    return null;
+    return null
   }
 
   // Default context menu inclusions
   const template = [
     {
-      role: "copy"
+      role: 'copy'
     },
     {
-      role: "selectall"
+      role: 'selectall'
     }
-  ];
+  ]
 
   if (
-    event.target.tagName.toLowerCase() === "a" &&
-    event.target.getAttribute("href")
+    event.target.tagName.toLowerCase() === 'a' &&
+    event.target.getAttribute('href')
   ) {
     // Link opener for files on the local system pointed to by href
-    const href = event.target.href;
-    const isLocalFile = href.startsWith("file:");
+    const href = event.target.href
+    const isLocalFile = href.startsWith('file:')
     if (isLocalFile) {
-      const absPath = uri2path(href);
+      const absPath = uri2path(href)
       try {
         if (fs.lstatSync(absPath).isFile()) {
           template.push({
-            label: i18n.__("Show in explorer"),
+            label: i18n.__('Show in explorer'),
             click: e => shell.showItemInFolder(absPath)
-          });
+          })
         }
       } catch (e) {
         console.log(
-          "Error while evaluating if the file is locally available",
+          'Error while evaluating if the file is locally available',
           e
-        );
+        )
       }
     }
 
     // Add option to context menu to copy url
     template.push({
-      label: i18n.__("Copy Url"),
+      label: i18n.__('Copy Url'),
       click: e => clipboard.writeText(href)
-    });
+    })
   }
-  return Menu.buildFromTemplate(template);
-};
+  return Menu.buildFromTemplate(template)
+}
 
 module.exports = {
   buildEditorContextMenu: buildEditorContextMenu,
   buildMarkdownPreviewContextMenu: buildMarkdownPreviewContextMenu
-};
+}

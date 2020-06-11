@@ -1,5 +1,5 @@
-import browserEnv from "browser-env";
-browserEnv(["window", "document", "navigator"]);
+import browserEnv from 'browser-env'
+browserEnv(['window', 'document', 'navigator'])
 
 // for CodeMirror mockup
 document.body.createTextRange = function() {
@@ -7,21 +7,21 @@ document.body.createTextRange = function() {
     setEnd: function() {},
     setStart: function() {},
     getBoundingClientRect: function() {
-      return { right: 0 };
+      return { right: 0 }
     },
     getClientRects: function() {
       return {
         length: 0,
         left: 0,
         right: 0
-      };
+      }
     }
-  };
-};
+  }
+}
 
 window.localStorage = {
   // polyfill
   getItem() {
-    return "{}";
+    return '{}'
   }
-};
+}

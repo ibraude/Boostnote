@@ -1,141 +1,141 @@
-"use strict";
+'use strict'
 
 module.exports = function(md, renderers, defaultRenderer) {
-  const paramsRE = /^[ \t]*([\w+#-]+)?(?:\(((?:\s*\w[-\w]*(?:=(?:'(?:.*?[^\\])?'|"(?:.*?[^\\])?"|(?:[^'"][^\s]*)))?)*)\))?(?::([^:]*)(?::(\d+))?)?\s*$/;
+  const paramsRE = /^[ \t]*([\w+#-]+)?(?:\(((?:\s*\w[-\w]*(?:=(?:'(?:.*?[^\\])?'|"(?:.*?[^\\])?"|(?:[^'"][^\s]*)))?)*)\))?(?::([^:]*)(?::(\d+))?)?\s*$/
 
   function fence(state, startLine, endLine, silent) {
-    let pos = state.bMarks[startLine] + state.tShift[startLine];
-    let max = state.eMarks[startLine];
+    let pos = state.bMarks[startLine] + state.tShift[startLine]
+    let max = state.eMarks[startLine]
 
     if (state.sCount[startLine] - state.blkIndent >= 4 || pos + 3 > max) {
-      return false;
+      return false
     }
 
-    const marker = state.src.charCodeAt(pos);
+    const marker = state.src.charCodeAt(pos)
     if (marker !== 0x7e /* ~ */ && marker !== 0x60 /* ` */) {
-      return false;
+      return false
     }
 
-    let mem = pos;
-    pos = state.skipChars(pos, marker);
+    let mem = pos
+    pos = state.skipChars(pos, marker)
 
-    let len = pos - mem;
+    let len = pos - mem
     if (len < 3) {
-      return false;
+      return false
     }
 
-    const markup = state.src.slice(mem, pos);
-    const params = state.src.slice(pos, max);
+    const markup = state.src.slice(mem, pos)
+    const params = state.src.slice(pos, max)
 
     if (silent) {
-      return true;
+      return true
     }
 
-    let nextLine = startLine;
-    let haveEndMarker = false;
+    let nextLine = startLine
+    let haveEndMarker = false
 
     while (true) {
-      nextLine++;
+      nextLine++
       if (nextLine >= endLine) {
-        break;
+        break
       }
 
-      pos = mem = state.bMarks[nextLine] + state.tShift[nextLine];
-      max = state.eMarks[nextLine];
+      pos = mem = state.bMarks[nextLine] + state.tShift[nextLine]
+      max = state.eMarks[nextLine]
 
       if (pos < max && state.sCount[nextLine] < state.blkIndent) {
-        break;
+        break
       }
       if (
         state.src.charCodeAt(pos) !== marker ||
         state.sCount[nextLine] - state.blkIndent >= 4
       ) {
-        continue;
+        continue
       }
 
-      pos = state.skipChars(pos, marker);
+      pos = state.skipChars(pos, marker)
 
       if (pos - mem < len) {
-        continue;
+        continue
       }
 
-      pos = state.skipSpaces(pos);
+      pos = state.skipSpaces(pos)
 
       if (pos >= max) {
-        haveEndMarker = true;
-        break;
+        haveEndMarker = true
+        break
       }
     }
 
-    len = state.sCount[startLine];
-    state.line = nextLine + (haveEndMarker ? 1 : 0);
+    len = state.sCount[startLine]
+    state.line = nextLine + (haveEndMarker ? 1 : 0)
 
-    const parameters = {};
-    let langType = "";
-    let fileName = "";
-    let firstLineNumber = 1;
+    const parameters = {}
+    let langType = ''
+    let fileName = ''
+    let firstLineNumber = 1
 
-    let match = paramsRE.exec(params);
+    let match = paramsRE.exec(params)
     if (match) {
       if (match[1]) {
-        langType = match[1];
+        langType = match[1]
       }
       if (match[3]) {
-        fileName = match[3];
+        fileName = match[3]
       }
       if (match[4]) {
-        firstLineNumber = parseInt(match[4], 10);
+        firstLineNumber = parseInt(match[4], 10)
       }
 
       if (match[2]) {
-        const params = match[2];
-        const regex = /(\w[-\w]*)(?:=(?:'(.*?[^\\])?'|"(.*?[^\\])?"|([^'"][^\s]*)))?/g;
+        const params = match[2]
+        const regex = /(\w[-\w]*)(?:=(?:'(.*?[^\\])?'|"(.*?[^\\])?"|([^'"][^\s]*)))?/g
 
-        let name, value;
+        let name, value
         while ((match = regex.exec(params))) {
-          name = match[1];
-          value = match[2] || match[3] || match[4] || null;
+          name = match[1]
+          value = match[2] || match[3] || match[4] || null
 
-          const height = /^(\d+)h$/.exec(name);
+          const height = /^(\d+)h$/.exec(name)
           if (height && !value) {
-            parameters.height = height[1];
+            parameters.height = height[1]
           } else {
-            parameters[name] = value;
+            parameters[name] = value
           }
         }
       }
     }
 
-    let token;
+    let token
     if (renderers[langType]) {
-      token = state.push(`${langType}_fence`, "div", 0);
+      token = state.push(`${langType}_fence`, 'div', 0)
     } else {
-      token = state.push("_fence", "code", 0);
+      token = state.push('_fence', 'code', 0)
     }
 
-    token.langType = langType;
-    token.fileName = fileName;
-    token.firstLineNumber = firstLineNumber;
-    token.parameters = parameters;
+    token.langType = langType
+    token.fileName = fileName
+    token.firstLineNumber = firstLineNumber
+    token.parameters = parameters
 
-    token.content = state.getLines(startLine + 1, nextLine, len, true);
-    token.markup = markup;
-    token.map = [startLine, state.line];
+    token.content = state.getLines(startLine + 1, nextLine, len, true)
+    token.markup = markup
+    token.map = [startLine, state.line]
 
-    return true;
+    return true
   }
 
-  md.block.ruler.before("fence", "_fence", fence, {
-    alt: ["paragraph", "reference", "blockquote", "list"]
-  });
+  md.block.ruler.before('fence', '_fence', fence, {
+    alt: ['paragraph', 'reference', 'blockquote', 'list']
+  })
 
   for (const name in renderers) {
     md.renderer.rules[`${name}_fence`] = (tokens, index) =>
-      renderers[name](tokens[index]);
+      renderers[name](tokens[index])
   }
 
   if (defaultRenderer) {
-    md.renderer.rules["_fence"] = (tokens, index) =>
-      defaultRenderer(tokens[index]);
+    md.renderer.rules['_fence'] = (tokens, index) =>
+      defaultRenderer(tokens[index])
   }
-};
+}

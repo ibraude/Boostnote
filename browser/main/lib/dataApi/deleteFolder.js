@@ -1,10 +1,10 @@
-const _ = require("lodash");
-const path = require("path");
-const resolveStorageData = require("./resolveStorageData");
-const resolveStorageNotes = require("./resolveStorageNotes");
-const CSON = require("@rokt33r/season");
-const { findStorage } = require("browser/lib/findStorage");
-const deleteSingleNote = require("./deleteNote");
+const _ = require('lodash')
+const path = require('path')
+const resolveStorageData = require('./resolveStorageData')
+const resolveStorageNotes = require('./resolveStorageNotes')
+const CSON = require('@rokt33r/season')
+const { findStorage } = require('browser/lib/findStorage')
+const deleteSingleNote = require('./deleteNote')
 
 /**
  * @param {String} storageKey
@@ -19,11 +19,11 @@ const deleteSingleNote = require("./deleteNote");
  * ```
  */
 function deleteFolder(storageKey, folderKey) {
-  let targetStorage;
+  let targetStorage
   try {
-    targetStorage = findStorage(storageKey);
+    targetStorage = findStorage(storageKey)
   } catch (e) {
-    return Promise.reject(e);
+    return Promise.reject(e)
   }
 
   return resolveStorageData(targetStorage)
@@ -32,37 +32,37 @@ function deleteFolder(storageKey, folderKey) {
         return {
           storage,
           notes
-        };
-      });
+        }
+      })
     })
     .then(function deleteFolderAndNotes(data) {
-      const { storage, notes } = data;
+      const { storage, notes } = data
       storage.folders = storage.folders.filter(function excludeTargetFolder(
         folder
       ) {
-        return folder.key !== folderKey;
-      });
+        return folder.key !== folderKey
+      })
 
       const targetNotes = notes.filter(function filterTargetNotes(note) {
-        return note.folder === folderKey;
-      });
+        return note.folder === folderKey
+      })
 
       const deleteAllNotes = targetNotes.map(function deleteNote(note) {
-        return deleteSingleNote(storageKey, note.key);
-      });
-      return Promise.all(deleteAllNotes).then(() => storage);
+        return deleteSingleNote(storageKey, note.key)
+      })
+      return Promise.all(deleteAllNotes).then(() => storage)
     })
     .then(function(storage) {
       CSON.writeFileSync(
-        path.join(storage.path, "boostnote.json"),
-        _.pick(storage, ["folders", "version"])
-      );
+        path.join(storage.path, 'boostnote.json'),
+        _.pick(storage, ['folders', 'version'])
+      )
 
       return {
         storage,
         folderKey
-      };
-    });
+      }
+    })
 }
 
-module.exports = deleteFolder;
+module.exports = deleteFolder

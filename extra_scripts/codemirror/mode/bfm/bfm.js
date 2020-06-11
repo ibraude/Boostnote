@@ -1,65 +1,65 @@
-(function(mod) {
-  if (typeof exports == "object" && typeof module == "object")
+;(function(mod) {
+  if (typeof exports == 'object' && typeof module == 'object')
     // CommonJS
     mod(
-      require("../codemirror/lib/codemirror"),
-      require("../codemirror/mode/gfm/gfm"),
-      require("../codemirror/mode/yaml-frontmatter/yaml-frontmatter")
-    );
-  else if (typeof define == "function" && define.amd)
+      require('../codemirror/lib/codemirror'),
+      require('../codemirror/mode/gfm/gfm'),
+      require('../codemirror/mode/yaml-frontmatter/yaml-frontmatter')
+    )
+  else if (typeof define == 'function' && define.amd)
     // AMD
     define([
-      "../codemirror/lib/codemirror",
-      "../codemirror/mode/gfm/gfm",
-      "../codemirror/mode/yaml-frontmatter/yaml-frontmatter"
-    ], mod);
+      '../codemirror/lib/codemirror',
+      '../codemirror/mode/gfm/gfm',
+      '../codemirror/mode/yaml-frontmatter/yaml-frontmatter'
+    ], mod)
   // Plain browser env
-  else mod(CodeMirror);
+  else mod(CodeMirror)
 })(function(CodeMirror) {
-  "use strict";
+  'use strict'
 
-  const fencedCodeRE = /^(~~~+|```+)[ \t]*([\w+#-]+)?(?:\(((?:\s*\w[-\w]*(?:=(?:'(?:.*?[^\\])?'|"(?:.*?[^\\])?"|(?:[^'"][^\s]*)))?)*)\))?(?::([^:]*)(?::(\d+))?)?\s*$/;
+  const fencedCodeRE = /^(~~~+|```+)[ \t]*([\w+#-]+)?(?:\(((?:\s*\w[-\w]*(?:=(?:'(?:.*?[^\\])?'|"(?:.*?[^\\])?"|(?:[^'"][^\s]*)))?)*)\))?(?::([^:]*)(?::(\d+))?)?\s*$/
 
   function getMode(name, params, config, cm) {
     if (!name) {
-      return null;
+      return null
     }
 
-    const parameters = {};
+    const parameters = {}
     if (params) {
-      const regex = /(\w[-\w]*)(?:=(?:'(.*?[^\\])?'|"(.*?[^\\])?"|([^'"][^\s]*)))?/g;
+      const regex = /(\w[-\w]*)(?:=(?:'(.*?[^\\])?'|"(.*?[^\\])?"|([^'"][^\s]*)))?/g
 
-      let match;
+      let match
       while ((match = regex.exec(params))) {
-        parameters[match[1]] = match[2] || match[3] || match[4] || null;
+        parameters[match[1]] = match[2] || match[3] || match[4] || null
       }
     }
 
-    if (name === "chart") {
-      name = parameters.hasOwnProperty("yaml") ? "yaml" : "json";
+    if (name === 'chart') {
+      name = parameters.hasOwnProperty('yaml') ? 'yaml' : 'json'
     }
 
-    const found = CodeMirror.findModeByName(name);
+    const found = CodeMirror.findModeByName(name)
     if (!found) {
-      return null;
+      return null
     }
 
     if (CodeMirror.modes.hasOwnProperty(found.mode)) {
-      const mode = CodeMirror.getMode(config, found.mode);
+      const mode = CodeMirror.getMode(config, found.mode)
 
-      return mode.name === "null" ? null : mode;
+      return mode.name === 'null' ? null : mode
     } else {
       CodeMirror.requireMode(found.mode, () => {
-        cm.setOption("mode", cm.getOption("mode"));
-      });
+        cm.setOption('mode', cm.getOption('mode'))
+      })
     }
   }
 
   CodeMirror.defineMode(
-    "bfm",
+    'bfm',
     function(config, baseConfig) {
-      baseConfig.name = "yaml-frontmatter";
-      const baseMode = CodeMirror.getMode(config, baseConfig);
+      baseConfig.name = 'yaml-frontmatter'
+      const baseMode = CodeMirror.getMode(config, baseConfig)
 
       return {
         startState: function() {
@@ -76,7 +76,7 @@
 
             inTable: false,
             rowIndex: 0
-          };
+          }
         },
         copyState: function(s) {
           return {
@@ -96,37 +96,37 @@
 
             inTable: s.inTable,
             rowIndex: s.rowIndex
-          };
+          }
         },
         token: function(stream, state) {
-          const initialPos = stream.pos;
+          const initialPos = stream.pos
 
           if (state.fencedEndRE && stream.match(state.fencedEndRE)) {
-            state.fencedEndRE = null;
-            state.fencedMode = null;
-            state.fencedState = null;
+            state.fencedEndRE = null
+            state.fencedMode = null
+            state.fencedState = null
 
-            stream.pos = initialPos;
+            stream.pos = initialPos
           } else {
             if (state.fencedMode) {
-              return state.fencedMode.token(stream, state.fencedState);
+              return state.fencedMode.token(stream, state.fencedState)
             }
 
-            const match = stream.match(fencedCodeRE, true);
+            const match = stream.match(fencedCodeRE, true)
             if (match) {
-              state.fencedEndRE = new RegExp(match[1] + "+ *$");
+              state.fencedEndRE = new RegExp(match[1] + '+ *$')
 
               state.fencedMode = getMode(
                 match[2],
                 match[3],
                 config,
                 stream.lineOracle.doc.cm
-              );
+              )
               if (state.fencedMode) {
-                state.fencedState = CodeMirror.startState(state.fencedMode);
+                state.fencedState = CodeMirror.startState(state.fencedMode)
               }
 
-              stream.pos = initialPos;
+              stream.pos = initialPos
             }
           }
 
@@ -134,92 +134,92 @@
             stream != state.streamSeen ||
             Math.min(state.basePos, state.overlayPos) < stream.start
           ) {
-            state.streamSeen = stream;
-            state.basePos = state.overlayPos = stream.start;
+            state.streamSeen = stream
+            state.basePos = state.overlayPos = stream.start
           }
 
           if (stream.start == state.basePos) {
-            state.baseCur = baseMode.token(stream, state.baseState);
-            state.basePos = stream.pos;
+            state.baseCur = baseMode.token(stream, state.baseState)
+            state.basePos = stream.pos
           }
           if (stream.start == state.overlayPos) {
-            stream.pos = stream.start;
-            state.overlayCur = this.overlayToken(stream, state);
-            state.overlayPos = stream.pos;
+            stream.pos = stream.start
+            state.overlayCur = this.overlayToken(stream, state)
+            state.overlayPos = stream.pos
           }
-          stream.pos = Math.min(state.basePos, state.overlayPos);
+          stream.pos = Math.min(state.basePos, state.overlayPos)
 
           if (state.overlayCur == null) {
-            return state.baseCur;
+            return state.baseCur
           } else if (state.baseCur != null && state.combineTokens) {
-            return state.baseCur + " " + state.overlayCur;
+            return state.baseCur + ' ' + state.overlayCur
           } else {
-            return state.overlayCur;
+            return state.overlayCur
           }
         },
         overlayToken: function(stream, state) {
-          state.combineTokens = false;
+          state.combineTokens = false
 
           if (state.fencedEndRE && stream.match(state.fencedEndRE)) {
-            state.fencedEndRE = null;
-            state.localMode = null;
-            state.localState = null;
+            state.fencedEndRE = null
+            state.localMode = null
+            state.localState = null
 
-            return null;
+            return null
           }
 
           if (state.localMode) {
-            return state.localMode.token(stream, state.localState) || "";
+            return state.localMode.token(stream, state.localState) || ''
           }
 
-          const match = stream.match(fencedCodeRE, true);
+          const match = stream.match(fencedCodeRE, true)
           if (match) {
-            state.fencedEndRE = new RegExp(match[1] + "+ *$");
+            state.fencedEndRE = new RegExp(match[1] + '+ *$')
 
             state.localMode = getMode(
               match[2],
               match[3],
               config,
               stream.lineOracle.doc.cm
-            );
+            )
             if (state.localMode) {
-              state.localState = CodeMirror.startState(state.localMode);
+              state.localState = CodeMirror.startState(state.localMode)
             }
 
-            return null;
+            return null
           }
 
-          state.combineTokens = true;
+          state.combineTokens = true
 
           if (state.inTable) {
             if (stream.match(/^\|/)) {
-              ++state.rowIndex;
+              ++state.rowIndex
 
-              stream.skipToEnd();
+              stream.skipToEnd()
 
               if (state.rowIndex === 1) {
-                return "table table-separator";
+                return 'table table-separator'
               } else if (state.rowIndex % 2 === 0) {
-                return "table table-row table-row-even";
+                return 'table table-row table-row-even'
               } else {
-                return "table table-row table-row-odd";
+                return 'table table-row table-row-odd'
               }
             } else {
-              state.inTable = false;
+              state.inTable = false
 
-              stream.skipToEnd();
-              return null;
+              stream.skipToEnd()
+              return null
             }
           } else if (stream.match(/^\|/)) {
-            state.inTable = true;
-            state.rowIndex = 0;
+            state.inTable = true
+            state.rowIndex = 0
 
-            stream.skipToEnd();
-            return "table table-header";
+            stream.skipToEnd()
+            return 'table table-header'
           }
 
-          stream.skipToEnd();
-          return null;
+          stream.skipToEnd()
+          return null
         },
         electricChars: baseMode.electricChars,
         innerMode: function(state) {
@@ -227,36 +227,36 @@
             return {
               mode: state.fencedMode,
               state: state.fencedState
-            };
+            }
           } else {
             return {
               mode: baseMode,
               state: state.baseState
-            };
+            }
           }
         },
         blankLine: function(state) {
-          state.inTable = false;
+          state.inTable = false
 
           if (state.fencedMode) {
             return (
               state.fencedMode.blankLine &&
               state.fencedMode.blankLine(state.fencedState)
-            );
+            )
           } else {
-            return baseMode.blankLine(state.baseState);
+            return baseMode.blankLine(state.baseState)
           }
         }
-      };
+      }
     },
-    "yaml-frontmatter"
-  );
+    'yaml-frontmatter'
+  )
 
-  CodeMirror.defineMIME("text/x-bfm", "bfm");
+  CodeMirror.defineMIME('text/x-bfm', 'bfm')
 
   CodeMirror.modeInfo.push({
-    name: "Boost Flavored Markdown",
-    mime: "text/x-bfm",
-    mode: "bfm"
-  });
-});
+    name: 'Boost Flavored Markdown',
+    mime: 'text/x-bfm',
+    mode: 'bfm'
+  })
+})

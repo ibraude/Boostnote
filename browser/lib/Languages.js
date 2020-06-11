@@ -1,86 +1,90 @@
 const languages = [
   {
-    name: "Albanian",
-    locale: "sq"
+    name: 'Albanian',
+    locale: 'sq'
   },
   {
-    name: "Chinese (zh-CN)",
-    locale: "zh-CN"
+    name: 'Chinese (zh-CN)',
+    locale: 'zh-CN'
   },
   {
-    name: "Chinese (zh-TW)",
-    locale: "zh-TW"
+    name: 'Chinese (zh-TW)',
+    locale: 'zh-TW'
   },
   {
-    name: "Danish",
-    locale: "da"
+    name: 'Czech',
+    locale: 'cs'
   },
   {
-    name: "English",
-    locale: "en"
+    name: 'Danish',
+    locale: 'da'
   },
   {
-    name: "French",
-    locale: "fr"
+    name: 'English',
+    locale: 'en'
   },
   {
-    name: "German",
-    locale: "de"
+    name: 'French',
+    locale: 'fr'
   },
   {
-    name: "Hungarian",
-    locale: "hu"
+    name: 'German',
+    locale: 'de'
   },
   {
-    name: "Japanese",
-    locale: "ja"
+    name: 'Hungarian',
+    locale: 'hu'
   },
   {
-    name: "Korean",
-    locale: "ko"
+    name: 'Japanese',
+    locale: 'ja'
   },
   {
-    name: "Norwegian",
-    locale: "no"
+    name: 'Korean',
+    locale: 'ko'
   },
   {
-    name: "Polish",
-    locale: "pl"
+    name: 'Norwegian',
+    locale: 'no'
   },
   {
-    name: "Portuguese (PT-BR)",
-    locale: "pt-BR"
+    name: 'Polish',
+    locale: 'pl'
   },
   {
-    name: "Portuguese (PT-PT)",
-    locale: "pt-PT"
+    name: 'Portuguese (PT-BR)',
+    locale: 'pt-BR'
   },
   {
-    name: "Russian",
-    locale: "ru"
+    name: 'Portuguese (PT-PT)',
+    locale: 'pt-PT'
   },
   {
-    name: "Spanish",
-    locale: "es-ES"
+    name: 'Russian',
+    locale: 'ru'
   },
   {
-    name: "Turkish",
-    locale: "tr"
+    name: 'Spanish',
+    locale: 'es-ES'
   },
   {
-    name: "Thai",
-    locale: "th"
+    name: 'Turkish',
+    locale: 'tr'
+  },
+  {
+    name: 'Thai',
+    locale: 'th'
   }
-];
+]
 
 module.exports = {
   getLocales() {
     return languages.reduce(function(localeList, locale) {
-      localeList.push(locale.locale);
-      return localeList;
-    }, []);
+      localeList.push(locale.locale)
+      return localeList
+    }, [])
   },
   getLanguages() {
-    return languages;
+    return languages
   }
-};
+}

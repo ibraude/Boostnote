@@ -1,31 +1,31 @@
-import styles from "../components/CodeEditor.styl";
-import i18n from "browser/lib/i18n";
+import styles from '../components/CodeEditor.styl'
+import i18n from 'browser/lib/i18n'
 
-const Typo = require("typo-js");
-const _ = require("lodash");
+const Typo = require('typo-js')
+const _ = require('lodash')
 
-const CSS_ERROR_CLASS = "codeEditor-typo";
-const SPELLCHECK_DISABLED = "NONE";
-const DICTIONARY_PATH = "../dictionaries";
-const MILLISECONDS_TILL_LIVECHECK = 500;
+const CSS_ERROR_CLASS = 'codeEditor-typo'
+const SPELLCHECK_DISABLED = 'NONE'
+const DICTIONARY_PATH = '../dictionaries'
+const MILLISECONDS_TILL_LIVECHECK = 500
 
-let dictionary = null;
-let self;
+let dictionary = null
+let self
 
 function getAvailableDictionaries() {
   return [
-    { label: i18n.__("Spellcheck disabled"), value: SPELLCHECK_DISABLED },
-    { label: i18n.__("English"), value: "en_GB" },
-    { label: i18n.__("German"), value: "de_DE" },
-    { label: i18n.__("French"), value: "fr_FR" }
-  ];
+    { label: i18n.__('Spellcheck disabled'), value: SPELLCHECK_DISABLED },
+    { label: i18n.__('English'), value: 'en_GB' },
+    { label: i18n.__('German'), value: 'de_DE' },
+    { label: i18n.__('French'), value: 'fr_FR' }
+  ]
 }
 
 /**
  * Only to be used in the tests :)
  */
 function setDictionaryForTestsOnly(newDictionary) {
-  dictionary = newDictionary;
+  dictionary = newDictionary
 }
 
 /**
@@ -35,23 +35,23 @@ function setDictionaryForTestsOnly(newDictionary) {
  * @param {String} lang on of the values from getAvailableDictionaries()-Method
  */
 function setLanguage(editor, lang) {
-  self = this;
-  dictionary = null;
+  self = this
+  dictionary = null
 
   if (editor == null) {
-    return;
+    return
   }
 
-  const existingMarks = editor.getAllMarks() || [];
+  const existingMarks = editor.getAllMarks() || []
   for (const mark of existingMarks) {
-    mark.clear();
+    mark.clear()
   }
   if (lang !== SPELLCHECK_DISABLED) {
     dictionary = new Typo(lang, false, false, {
       dictionaryPath: DICTIONARY_PATH,
       asyncLoad: true,
       loadedCallback: () => checkWholeDocument(editor)
-    });
+    })
   }
 }
 
@@ -60,12 +60,12 @@ function setLanguage(editor, lang) {
  * @param {Codemirror} editor CodeMirror-Editor
  */
 function checkWholeDocument(editor) {
-  const lastLine = editor.lineCount() - 1;
-  const textOfLastLine = editor.getLine(lastLine) || "";
-  const lastChar = textOfLastLine.length;
-  const from = { line: 0, ch: 0 };
-  const to = { line: lastLine, ch: lastChar };
-  checkMultiLineRange(editor, from, to);
+  const lastLine = editor.lineCount() - 1
+  const textOfLastLine = editor.getLine(lastLine) || ''
+  const lastChar = textOfLastLine.length
+  const from = { line: 0, ch: 0 }
+  const to = { line: lastLine, ch: lastChar }
+  checkMultiLineRange(editor, from, to)
 }
 
 /**
@@ -80,26 +80,26 @@ function checkMultiLineRange(editor, from, to) {
       pos1.line > pos2.line ||
       (pos1.line === pos2.line && pos1.ch > pos2.ch)
     ) {
-      return { from: pos2, to: pos1 };
+      return { from: pos2, to: pos1 }
     }
-    return { from: pos1, to: pos2 };
+    return { from: pos1, to: pos2 }
   }
 
-  const { from: smallerPos, to: higherPos } = sortRange(from, to);
+  const { from: smallerPos, to: higherPos } = sortRange(from, to)
   for (let l = smallerPos.line; l <= higherPos.line; l++) {
-    const line = editor.getLine(l) || "";
-    let w = 0;
+    const line = editor.getLine(l) || ''
+    let w = 0
     if (l === smallerPos.line) {
-      w = smallerPos.ch;
+      w = smallerPos.ch
     }
-    let wEnd = line.length;
+    let wEnd = line.length
     if (l === higherPos.line) {
-      wEnd = higherPos.ch;
+      wEnd = higherPos.ch
     }
     while (w <= wEnd) {
-      const wordRange = editor.findWordAt({ line: l, ch: w });
-      self.checkWord(editor, wordRange);
-      w += wordRange.head.ch - wordRange.anchor.ch + 1;
+      const wordRange = editor.findWordAt({ line: l, ch: w })
+      self.checkWord(editor, wordRange)
+      w += wordRange.head.ch - wordRange.anchor.ch + 1
     }
   }
 }
@@ -113,14 +113,14 @@ function checkMultiLineRange(editor, from, to) {
  * Having the following structure: <code>{anchor: {line: integer, ch: integer}, head: {line: integer, ch: integer}}</code>
  */
 function checkWord(editor, wordRange) {
-  const word = editor.getRange(wordRange.anchor, wordRange.head);
+  const word = editor.getRange(wordRange.anchor, wordRange.head)
   if (word == null || word.length <= 3) {
-    return;
+    return
   }
   if (!dictionary.check(word)) {
     editor.markText(wordRange.anchor, wordRange.head, {
       className: styles[CSS_ERROR_CLASS]
-    });
+    })
   }
 }
 
@@ -138,56 +138,56 @@ function checkChangeRange(editor, fromChangeObject, toChangeObject) {
    * @returns {{start: {line: *, ch: *}, end: {line: *, ch: *}}}
    */
   function getStartAndEnd(start, end) {
-    const possiblePositions = [start.from, start.to, end.from, end.to];
-    let smallest = start.from;
-    let biggest = end.to;
+    const possiblePositions = [start.from, start.to, end.from, end.to]
+    let smallest = start.from
+    let biggest = end.to
     for (const currentPos of possiblePositions) {
       if (
         currentPos.line < smallest.line ||
         (currentPos.line === smallest.line && currentPos.ch < smallest.ch)
       ) {
-        smallest = currentPos;
+        smallest = currentPos
       }
       if (
         currentPos.line > biggest.line ||
         (currentPos.line === biggest.line && currentPos.ch > biggest.ch)
       ) {
-        biggest = currentPos;
+        biggest = currentPos
       }
     }
-    return { start: smallest, end: biggest };
+    return { start: smallest, end: biggest }
   }
 
   if (dictionary === null || editor == null) {
-    return;
+    return
   }
 
   try {
-    const { start, end } = getStartAndEnd(fromChangeObject, toChangeObject);
+    const { start, end } = getStartAndEnd(fromChangeObject, toChangeObject)
 
     // Expand the range to include words after/before whitespaces
-    start.ch = Math.max(start.ch - 1, 0);
-    end.ch = end.ch + 1;
+    start.ch = Math.max(start.ch - 1, 0)
+    end.ch = end.ch + 1
 
     // clean existing marks
-    const existingMarks = editor.findMarks(start, end) || [];
+    const existingMarks = editor.findMarks(start, end) || []
     for (const mark of existingMarks) {
-      mark.clear();
+      mark.clear()
     }
 
-    self.checkMultiLineRange(editor, start, end);
+    self.checkMultiLineRange(editor, start, end)
   } catch (e) {
     console.info(
-      "Error during the spell check. It might be due to problems figuring out the range of the new text..",
+      'Error during the spell check. It might be due to problems figuring out the range of the new text..',
       e
-    );
+    )
   }
 }
 
 function saveLiveSpellCheckFrom(changeObject) {
-  liveSpellCheckFrom = changeObject;
+  liveSpellCheckFrom = changeObject
 }
-let liveSpellCheckFrom;
+let liveSpellCheckFrom
 const debouncedSpellCheckLeading = _.debounce(
   saveLiveSpellCheckFrom,
   MILLISECONDS_TILL_LIVECHECK,
@@ -195,7 +195,7 @@ const debouncedSpellCheckLeading = _.debounce(
     leading: true,
     trailing: false
   }
-);
+)
 const debouncedSpellCheck = _.debounce(
   checkChangeRange,
   MILLISECONDS_TILL_LIVECHECK,
@@ -203,7 +203,7 @@ const debouncedSpellCheck = _.debounce(
     leading: false,
     trailing: true
   }
-);
+)
 
 /**
  * Handles a keystroke. Buffers the input and performs a live spell check after a certain time. Uses _debounce from lodash to buffer the input
@@ -212,10 +212,10 @@ const debouncedSpellCheck = _.debounce(
  */
 function handleChange(editor, changeObject) {
   if (dictionary === null) {
-    return;
+    return
   }
-  debouncedSpellCheckLeading(changeObject);
-  debouncedSpellCheck(editor, liveSpellCheckFrom, changeObject);
+  debouncedSpellCheckLeading(changeObject)
+  debouncedSpellCheck(editor, liveSpellCheckFrom, changeObject)
 }
 
 /**
@@ -226,16 +226,16 @@ function handleChange(editor, changeObject) {
  */
 function getSpellingSuggestion(word) {
   if (dictionary == null || word == null) {
-    return [];
+    return []
   }
-  return dictionary.suggest(word);
+  return dictionary.suggest(word)
 }
 
 /**
  * Returns the name of the CSS class used for errors
  */
 function getCSSClassName() {
-  return styles[CSS_ERROR_CLASS];
+  return styles[CSS_ERROR_CLASS]
 }
 
 module.exports = {
@@ -252,4 +252,4 @@ module.exports = {
   checkWholeDocument,
   setDictionaryForTestsOnly,
   getCSSClassName
-};
+}

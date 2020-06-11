@@ -1,16 +1,16 @@
-import React from "react";
-import { Provider } from "react-redux";
-import ReactDOM from "react-dom";
-import { store } from "../store";
+import React from 'react'
+import { Provider } from 'react-redux'
+import ReactDOM from 'react-dom'
+import { store } from '../store'
 
 class ModalBase extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       component: null,
       componentProps: {},
       isHidden: true
-    };
+    }
   }
 
   close() {
@@ -19,18 +19,18 @@ class ModalBase extends React.Component {
         component: null,
         componentProps: null,
         isHidden: true
-      });
+      })
     // Toggle overflow style on NoteList
     const list = document.querySelector(
-      ".NoteList__list___browser-main-NoteList-"
-    );
-    list.style.overflow = "auto";
+      '.NoteList__list___browser-main-NoteList-'
+    )
+    list.style.overflow = 'auto'
   }
 
   render() {
     return (
-      <div className={"ModalBase" + (this.state.isHidden ? " hide" : "")}>
-        <div onClick={e => this.close(e)} className="modalBack" />
+      <div className={'ModalBase' + (this.state.isHidden ? ' hide' : '')}>
+        <div onClick={e => this.close(e)} className='modalBack' />
         {this.state.component == null ? null : (
           <Provider store={store}>
             <this.state.component
@@ -40,44 +40,44 @@ class ModalBase extends React.Component {
           </Provider>
         )}
       </div>
-    );
+    )
   }
 }
 
-const el = document.createElement("div");
-document.body.appendChild(el);
-const modalBase = ReactDOM.render(<ModalBase />, el);
+const el = document.createElement('div')
+document.body.appendChild(el)
+const modalBase = ReactDOM.render(<ModalBase />, el)
 
 export function openModal(component, props) {
   if (modalBase == null) {
-    return;
+    return
   }
   // Hide scrollbar by removing overflow when modal opens
   const list = document.querySelector(
-    ".NoteList__list___browser-main-NoteList-"
-  );
-  list.style.overflow = "hidden";
-  document.body.setAttribute("data-modal", "open");
+    '.NoteList__list___browser-main-NoteList-'
+  )
+  list.style.overflow = 'hidden'
+  document.body.setAttribute('data-modal', 'open')
   modalBase.setState({
     component: component,
     componentProps: props,
     isHidden: false
-  });
+  })
 }
 
 export function closeModal() {
   if (modalBase == null) {
-    return;
+    return
   }
-  modalBase.close();
+  modalBase.close()
 }
 
 export function isModalOpen() {
-  return !modalBase.state.isHidden;
+  return !modalBase.state.isHidden
 }
 
 export default {
   open: openModal,
   close: closeModal,
   isOpen: isModalOpen
-};
+}

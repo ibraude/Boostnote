@@ -4,4 +4,4 @@ module.exports = {
   app: jest.genMockFunction(),
   remote: jest.genMockFunction(),
   dialog: jest.genMockFunction()
-};
+}
